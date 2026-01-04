@@ -1,0 +1,155 @@
+# serializer version: 1
+# name: test_dot_graph_output[empty-\n.data\n    .float 1\nbuff: .space 1024\n.text\n_start:\n    ret\n][empty_dot]
+  '''
+  digraph asm_flow {
+      node [shape=box fontname="Courier"];
+      // Edge definitions: Green=True (Taken), Red=False (Not Taken)
+      "_start" [label="_start\n----------------\nret\l"];
+  }
+  '''
+# ---
+# name: test_dot_graph_output[merge_arrays-\n.text\n.global merge_arrays\n.equ SAVED_REGISTERS, 3\n.equ src1, SAVED_REGISTERS*4 + 4\n.equ len1, src1+4\n.equ src2, len1+4\n.equ len2, src2+4\n.equ dest, len2+4\nmerge_arrays:\n    pushl %ebp\n    pushl %esi\n    pushl %edi\n    movl  %esp, %ebp\n\n    xorl %esi,   %esi # src1Counter\n    xorl %edi, %edi # src2Counter\n    xorl %edx, %edx # destCounter\n\nloop:\n    cmpl len1(%ebp), %esi\n    jge  pick2\n\n\n    cmpl len2(%ebp), %edi\n    jge  pick1\n\n    movl src1(%ebp), %eax // another comment\n    movl (%eax, %esi, 4), %ecx # random comment\n\n    movl src2(%ebp), %eax\n    cmpl (%eax, %edi, 4), %ecx\n\n    jge pick2\n\npick1:\n    cmpl len1(%ebp), %esi\n    jge  return\n\n    movl src1(%ebp), %eax\n    movl (%eax, %esi, 4), %ecx\n\n    movl dest(%ebp), %eax\n    movl %ecx, (%eax, %edx, 4)\n    \n    incl %esi\n    incl %edx\n    jmp  loop\n\npick2:\n    cmpl len2(%ebp), %edi\n    jge  return\n\n    movl src2(%ebp), %eax\n    movl (%eax, %edi, 4), %ecx\n\n    movl dest(%ebp), %eax\n    movl %ecx, (%eax, %edx, 4)\n    \n    incl %edi\n    incl %edx\n    jmp  loop\n\nreturn:\n    movl %ebp, %esp\n    popl %edi\n    popl %esi\n    popl %ebp\n    ret\n][merge_arrays_dot]
+  '''
+  digraph asm_flow {
+      node [shape=box fontname="Courier"];
+      // Edge definitions: Green=True (Taken), Red=False (Not Taken)
+      "merge_arrays" [label="merge_arrays\n----------------\npushl %ebp\lpushl %esi\lpushl %edi\lmovl %esp, %ebp\lxorl %esi, %esi\lxorl %edi, %edi\lxorl %edx, %edx\l"];
+      "merge_arrays" -> "loop" [color="black"];
+      "loop" [label="loop\n----------------\ncmpl len1(%ebp), %esi\ljge pick2\l"];
+      "loop" -> "pick2" [color="green" label="true" fontcolor="green"];
+      "loop" -> "loc_25" [color="red" label="false" fontcolor="red"];
+      "pick2" [label="pick2\n----------------\ncmpl len2(%ebp), %edi\ljge return\l"];
+      "pick2" -> "return" [color="green" label="true" fontcolor="green"];
+      "pick2" -> "loc_54" [color="red" label="false" fontcolor="red"];
+      "loc_25" [label="loc_25\n----------------\ncmpl len2(%ebp), %edi\ljge pick1\l"];
+      "loc_25" -> "pick1" [color="green" label="true" fontcolor="green"];
+      "loc_25" -> "loc_28" [color="red" label="false" fontcolor="red"];
+      "return" [label="return\n----------------\nmovl %ebp, %esp\lpopl %edi\lpopl %esi\lpopl %ebp\lret\l"];
+      "loc_54" [label="loc_54\n----------------\nmovl src2(%ebp), %eax\lmovl (%eax, %edi, 4), %ecx\lmovl dest(%ebp), %eax\lmovl %ecx, (%eax, %edx, 4)\lincl %edi\lincl %edx\ljmp loop\l"];
+      "loc_54" -> "loop" [color="black"];
+      "pick1" [label="pick1\n----------------\ncmpl len1(%ebp), %esi\ljge return\l"];
+      "pick1" -> "return" [color="green" label="true" fontcolor="green"];
+      "pick1" -> "loc_40" [color="red" label="false" fontcolor="red"];
+      "loc_28" [label="loc_28\n----------------\nmovl src1(%ebp), %eax\lmovl (%eax, %esi, 4), %ecx\lmovl src2(%ebp), %eax\lcmpl (%eax, %edi, 4), %ecx\ljge pick2\l"];
+      "loc_28" -> "pick2" [color="green" label="true" fontcolor="green"];
+      "loc_28" -> "pick1" [color="red" label="false" fontcolor="red"];
+      "loc_40" [label="loc_40\n----------------\nmovl src1(%ebp), %eax\lmovl (%eax, %esi, 4), %ecx\lmovl dest(%ebp), %eax\lmovl %ecx, (%eax, %edx, 4)\lincl %esi\lincl %edx\ljmp loop\l"];
+      "loc_40" -> "loop" [color="black"];
+  }
+  '''
+# ---
+# name: test_human_readable_output[empty-\n.data\n    .float 1\nbuff: .space 1024\n.text\n_start:\n    ret\n][empty_human]
+  '''
+  |- [Start] -> _start
+      ret
+      (end of flow)
+  '''
+# ---
+# name: test_human_readable_output[merge_arrays-\n.text\n.global merge_arrays\n.equ SAVED_REGISTERS, 3\n.equ src1, SAVED_REGISTERS*4 + 4\n.equ len1, src1+4\n.equ src2, len1+4\n.equ len2, src2+4\n.equ dest, len2+4\nmerge_arrays:\n    pushl %ebp\n    pushl %esi\n    pushl %edi\n    movl  %esp, %ebp\n\n    xorl %esi,   %esi # src1Counter\n    xorl %edi, %edi # src2Counter\n    xorl %edx, %edx # destCounter\n\nloop:\n    cmpl len1(%ebp), %esi\n    jge  pick2\n\n\n    cmpl len2(%ebp), %edi\n    jge  pick1\n\n    movl src1(%ebp), %eax // another comment\n    movl (%eax, %esi, 4), %ecx # random comment\n\n    movl src2(%ebp), %eax\n    cmpl (%eax, %edi, 4), %ecx\n\n    jge pick2\n\npick1:\n    cmpl len1(%ebp), %esi\n    jge  return\n\n    movl src1(%ebp), %eax\n    movl (%eax, %esi, 4), %ecx\n\n    movl dest(%ebp), %eax\n    movl %ecx, (%eax, %edx, 4)\n    \n    incl %esi\n    incl %edx\n    jmp  loop\n\npick2:\n    cmpl len2(%ebp), %edi\n    jge  return\n\n    movl src2(%ebp), %eax\n    movl (%eax, %edi, 4), %ecx\n\n    movl dest(%ebp), %eax\n    movl %ecx, (%eax, %edx, 4)\n    \n    incl %edi\n    incl %edx\n    jmp  loop\n\nreturn:\n    movl %ebp, %esp\n    popl %edi\n    popl %esi\n    popl %ebp\n    ret\n][merge_arrays_human]
+  '''
+  |- [Start] -> merge_arrays
+      pushl %ebp
+      pushl %esi
+      pushl %edi
+      movl %esp, %ebp
+      xorl %esi, %esi
+      xorl %edi, %edi
+      xorl %edx, %edx
+      |- [direct] -> loop
+          cmpl len1(%ebp), %esi
+          jge pick2
+          |- [taken] -> pick2
+              cmpl len2(%ebp), %edi
+              jge return
+              |- [taken] -> return
+                  movl %ebp, %esp
+                  popl %edi
+                  popl %esi
+                  popl %ebp
+                  ret
+                  (end of flow)
+              |- [not_taken] -> loc_54
+                  movl src2(%ebp), %eax
+                  movl (%eax, %edi, 4), %ecx
+                  movl dest(%ebp), %eax
+                  movl %ecx, (%eax, %edx, 4)
+                  incl %edi
+                  incl %edx
+                  jmp loop
+                  |- [direct] -> loop (CYCLE DETECTED - Stopping)
+                      cmpl len1(%ebp), %esi
+                      jge pick2
+          |- [not_taken] -> loc_25
+              cmpl len2(%ebp), %edi
+              jge pick1
+              |- [taken] -> pick1
+                  cmpl len1(%ebp), %esi
+                  jge return
+                  |- [taken] -> return
+                      movl %ebp, %esp
+                      popl %edi
+                      popl %esi
+                      popl %ebp
+                      ret
+                      (end of flow)
+                  |- [not_taken] -> loc_40
+                      movl src1(%ebp), %eax
+                      movl (%eax, %esi, 4), %ecx
+                      movl dest(%ebp), %eax
+                      movl %ecx, (%eax, %edx, 4)
+                      incl %esi
+                      incl %edx
+                      jmp loop
+                      |- [direct] -> loop (CYCLE DETECTED - Stopping)
+                          cmpl len1(%ebp), %esi
+                          jge pick2
+              |- [not_taken] -> loc_28
+                  movl src1(%ebp), %eax
+                  movl (%eax, %esi, 4), %ecx
+                  movl src2(%ebp), %eax
+                  cmpl (%eax, %edi, 4), %ecx
+                  jge pick2
+                  |- [taken] -> pick2
+                      cmpl len2(%ebp), %edi
+                      jge return
+                      |- [taken] -> return
+                          movl %ebp, %esp
+                          popl %edi
+                          popl %esi
+                          popl %ebp
+                          ret
+                          (end of flow)
+                      |- [not_taken] -> loc_54
+                          movl src2(%ebp), %eax
+                          movl (%eax, %edi, 4), %ecx
+                          movl dest(%ebp), %eax
+                          movl %ecx, (%eax, %edx, 4)
+                          incl %edi
+                          incl %edx
+                          jmp loop
+                          |- [direct] -> loop (CYCLE DETECTED - Stopping)
+                              cmpl len1(%ebp), %esi
+                              jge pick2
+                  |- [not_taken] -> pick1
+                      cmpl len1(%ebp), %esi
+                      jge return
+                      |- [taken] -> return
+                          movl %ebp, %esp
+                          popl %edi
+                          popl %esi
+                          popl %ebp
+                          ret
+                          (end of flow)
+                      |- [not_taken] -> loc_40
+                          movl src1(%ebp), %eax
+                          movl (%eax, %esi, 4), %ecx
+                          movl dest(%ebp), %eax
+                          movl %ecx, (%eax, %edx, 4)
+                          incl %esi
+                          incl %edx
+                          jmp loop
+                          |- [direct] -> loop (CYCLE DETECTED - Stopping)
+                              cmpl len1(%ebp), %esi
+                              jge pick2
+  '''
+# ---
