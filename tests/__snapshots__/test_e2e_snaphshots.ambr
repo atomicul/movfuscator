@@ -1,0 +1,127 @@
+# serializer version: 1
+# name: test_e2e_transformation_snapshot[call.s][call_obfuscated]
+  '''
+  .section .data
+  __GLOBAL_MEM:
+      .asciz "Absolute value of %d is %d
+  " # fmt (+0)
+      .int -42 # val (+28)
+  
+  .section .text
+  
+  .global abs_val
+  abs_val:
+      pushl %ebp
+      movl %esp, %ebp
+      movl 8(%ebp), %eax
+      cmpl $(0), %eax
+      jge end_abs
+      jmp loc_27
+  end_abs:
+      popl %ebp
+      ret
+  loc_27:
+      negl %eax
+      jmp end_abs
+  
+  .global main
+  main:
+      pushl %ebp
+      movl %esp, %ebp
+      pushl __GLOBAL_MEM+28
+      call abs_val
+      addl $(4), %esp
+      pushl %eax
+      pushl __GLOBAL_MEM+28
+      pushl $(__GLOBAL_MEM)
+      call printf
+      addl $(12), %esp
+      xorl %eax, %eax
+      leave
+      ret
+  
+  '''
+# ---
+# name: test_e2e_transformation_snapshot[counter.s][counter_obfuscated]
+  '''
+  .section .data
+  __GLOBAL_MEM:
+      .int 0 # counter (+0)
+      .int 5 # limit (+4)
+      .asciz "%d
+  " # fmtstr (+8)
+  
+  .section .text
+  
+  .global main
+  main:
+      movl __GLOBAL_MEM, %eax
+  check_loop:
+      cmpl __GLOBAL_MEM+4, %eax
+      jge exit_block
+      jmp body
+  exit_block:
+      xorl %eax, %eax
+      ret
+  body:
+      pushl %eax
+      pushl $(__GLOBAL_MEM+8)
+      call printf
+      addl $(4), %esp
+      popl %eax
+      incl %eax
+      movl %eax, __GLOBAL_MEM
+      jmp check_loop
+  
+  '''
+# ---
+# name: test_e2e_transformation_snapshot[math.s][math_obfuscated]
+  '''
+  .section .data
+  __GLOBAL_MEM:
+      .asciz "Value %d is High
+  " # msg_high (+0)
+      .zero 2 # __pad_18 (+18)
+      .asciz "Value %d is Low
+  " # msg_low (+20)
+      .zero 3 # __pad_37 (+37)
+      .int 10, 2, 8, 20, 5 # values (+40)
+      .int 5 # count (+60)
+  
+  .section .text
+  
+  .global main
+  main:
+      pushl %ebp
+      movl %esp, %ebp
+      xorl %esi, %esi
+  process_loop:
+      cmpl __GLOBAL_MEM+60, %esi
+      jge end_main
+      jmp loc_23
+  end_main:
+      xorl %eax, %eax
+      leave
+      ret
+  loc_23:
+      movl __GLOBAL_MEM+40(,%esi,4), %eax
+      cmpl $(8), %eax
+      jg is_high
+      jmp is_low
+  is_high:
+      pushl %eax
+      pushl $(__GLOBAL_MEM)
+      call printf
+      addl $(8), %esp
+  next_iter:
+      incl %esi
+      jmp process_loop
+  is_low:
+      pushl %eax
+      pushl $(__GLOBAL_MEM+20)
+      call printf
+      addl $(8), %esp
+      jmp next_iter
+  
+  '''
+# ---
