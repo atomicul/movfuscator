@@ -1,0 +1,13 @@
+# serializer version: 1
+# name: test_data_section_snapshot
+  '''
+  .section .data
+  GLOBAL_MEM:
+      .int 1337 # counter (+0)
+      .asciz "A" # flag (+4)
+      .zero 2 # __pad_6 (+6)
+      .int 99 # next_val (+8)
+      .zero 16 # scratch_pad (+12)
+      .float 1.1, 2.2, 3.3 # coefficients (+28)
+  '''
+# ---
