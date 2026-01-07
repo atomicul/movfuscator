@@ -6,6 +6,7 @@ build-backend = "hatchling.build"
 name = "movfuscator"
 version = "0.1.0"
 dependencies = []
+scripts = { movfuscator = "movfuscator.__main__:main" }
 
 [project.optional-dependencies]
 test = [
@@ -18,4 +19,4 @@ pythonpath = "src"
 testpaths = ["tests"]
 
 [tool.hatch.build.targets.wheel]
-packages = ["src"]
+packages = ["src/movfuscator"]
