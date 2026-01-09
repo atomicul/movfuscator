@@ -8,7 +8,7 @@ class Expression:
 
     This class models the algebraic structure of the expression only. It is agnostic
     as to whether the value represents an absolute memory address, a relative offset,
-    an immediate value.
+    or an immediate value.
 
     Usage:
         - To model an absolute address: Expression("Label")
@@ -27,7 +27,7 @@ class Expression:
                 self._constant = x
             case str(x):
                 # A raw string is treated as 1 * Symbol
-                self._terms[value] = 1
+                self._terms[x] = 1
             case Expression() as x:
                 self._constant = x._constant
                 self._terms = x._terms.copy()
@@ -51,16 +51,17 @@ class Expression:
     def __add__(self, other: Union["Expression", str, int]) -> "Expression":
         result = Expression(self)
 
-        if isinstance(other, int):
-            result._constant += other
-        elif isinstance(other, str):
-            result._terms[other] += 1
-        elif isinstance(other, Expression):
-            result._constant += other._constant
-            for sym, coeff in other._terms.items():
-                result._terms[sym] += coeff
-        else:
-            return NotImplemented
+        match other:
+            case int(x):
+                result._constant += x
+            case str(x):
+                result._terms[x] += 1
+            case Expression() as x:
+                result._constant += x._constant
+                for sym, coeff in x._terms.items():
+                    result._terms[sym] += coeff
+            case _:
+                return NotImplemented
 
         return result._cleanup()
 
@@ -70,14 +71,17 @@ class Expression:
     def __sub__(self, other: Union["Expression", str, int]) -> "Expression":
         result = Expression(self)
 
-        if isinstance(other, int):
-            result._constant -= other
-        elif isinstance(other, str):
-            result._terms[other] -= 1
-        elif isinstance(other, Expression):
-            result._constant -= other._constant
-            for sym, coeff in other._terms.items():
-                result._terms[sym] -= coeff
+        match other:
+            case int(x):
+                result._constant -= x
+            case str(x):
+                result._terms[x] -= 1
+            case Expression() as x:
+                result._constant -= x._constant
+                for sym, coeff in x._terms.items():
+                    result._terms[sym] -= coeff
+            case _:
+                return NotImplemented
 
         return result._cleanup()
 
@@ -87,12 +91,16 @@ class Expression:
 
     def __mul__(self, other: int) -> "Expression":
         # Supports scaling linear expressions (e.g. index * 4)
-
-        result = Expression(self)
-        result._constant *= other
-        for sym in result._terms:
-            result._terms[sym] *= other
-        return result._cleanup()
+        match other:
+            case int(x):
+                result = Expression(self)
+                result._constant *= x
+                for sym in result._terms:
+                    result._terms[sym] *= x
+                return result._cleanup()
+            case _:
+                # We strictly disallow non-linear multiplication (Expr * Expr)
+                return NotImplemented
 
     def __rmul__(self, other: int) -> "Expression":
         return self.__mul__(other)
