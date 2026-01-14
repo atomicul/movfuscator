@@ -30,14 +30,16 @@ flowchart TD
     DataParser -- "Provides Offsets" --> SymbolResolver
     
     %% Text Parser interactions
-    TextParser -- "Raw CFG" --> SymbolResolver
+    TextParser -- "Control Flow Graph" --> SymbolResolver
     
     %% Transformation Phase (Obfuscation Stubs)
-    SymbolResolver -- "Resolved CFG" --> Linearizer["Linearizer*<br/>(src/linearizer)"]
-    Linearizer -- "Flat Instruction Stream" --> InstReplacer["Instructions Replacer*<br/>(src/instructionreplacer)"]
+    SymbolResolver --> Linearizer["Linearizer*<br/>(src/linearizer)"]
+    Linearizer -- "Flat Instruction Stream" --> FlagExplicator["Flag Explicator*<br/>(src/flagexplicator)"]
+    FlagExplicator --> InstReplacer["Instructions Replacer*<br/>(src/instructionreplacer)"]
     
     %% Side dependencies
     Linearizer -. "Uses" .-> MemoryManager
+    FlagExplicator -. "Uses" .-> MemoryManager
     InstReplacer -. "Uses" .-> MemoryManager
     
     %% Final Assembly
@@ -49,6 +51,7 @@ flowchart TD
 
     %% Styling
     style Linearizer stroke:#f00,stroke-width:2px,stroke-dasharray: 5 5
+    style FlagExplicator stroke:#f00,stroke-width:2px,stroke-dasharray: 5 5
     style InstReplacer stroke:#f00,stroke-width:2px,stroke-dasharray: 5 5
 ```
 
@@ -69,53 +72,27 @@ parsers. It receives the variable map from the Data Parser and the CFG from the
 Text Parser, replacing symbolic variable references with integer memory offsets
 into the `.data` section.
 5.  **Linearizer*** (`src/linearizer`): Responsible for flattening control flow.
-It uses a dispatch variable to check whether a given code path should run or not.
-Makes it so that instructions that shouldn't run write to a 'scratch' pointer
-instead of real data. It also makes it so that conditional jump instructions
-modify that dispatch variable, replacing the jump instructions with instructions
-of other kind.
-6.  **Instructions Replacer***: Responsible for replacing standard instructions
-with `mov` sequences.
-7.  **Movfuscator CLI** (`src/movfuscator`): This is the code for serializing
+Uses a single `jmp` instruction to loop through all code paths. Removes all
+other jump instructions in favor of cmoves. Uses a state machine logic to decide
+which block executes per cycle. Disables execution of all other blocks in that
+cycle by using a pointer to irrelevant memory. (scratch pad)
+6.  **Flag Explicator*** (`src/flagexplicator`): Responsible for movfuscating
+the logic instructions that came off of the previous stage (`cmov`, `test`, `cmp`).
+Instead of writing to EFLAGS, which cannot be read from with moves, we will write
+to designated variables. We use those variables to implement the conditional
+moves.
+7.  **Instructions Replacer*** (`src/instructionreplacer`): Movfuscates the
+remaining instructions. Converts more complex instructions into simpler instructions,
+which are then converted into moves by using lookup tables.
+8.  **Movfuscator CLI** (`src/movfuscator`): This is the code for serializing
 the outputs of the whole pipeline. The code for the CLI interface also lies
 within this package.
 
-Important: Components marked with an asterisk (*) are not currently implemented.
+**❗Important**: Components marked with an asterisk (*) are not currently implemented.
 They fulfil their minimum function to progress through the pipeline, but they
 do not perform any obfuscation logic.
 
----
-
-## 2. Roadmap & Stubs
-
-The following components are currently stubs (marked with `*`). Their
-implementation is the primary goal of the project.
-
-### The Linearizer* (`src/linearizer`)
-The Linearizer is designed to implement **Control Flow Flattening**:
-1.  **Jump Removal**: It replaces explicit jumps and conditional jumps 
-(e.g., `je`, `jge`) to create a single linear execution path. In the end, it
-should only utilize one jump instruction per function, looping over all instructions.
-2.  **Code path faking**: It modifies instructions to support conditional logic
-without branching.
-    * It calls `MemoryManager` to allocate a **scratch pointer** and dummy memory page.
-    * If a code path is "taken," instructions write to the real destination.
-    * If "not taken," instructions write to the scratch page, ensuring no side effects.
-    * Uses a variable to store the 'id' of the code path to execute this cycle
-3. **Function exit**: We must figure out a way to return from the functions.
-(Use the `ret` instruction as the global jmp? Have it so that it holds the r.a.
-on exit and the top of the function otherwise?)
-
-### The Instructions Replacer* (`src/instructionsreplacer`)
-This module (to be implemented) performs the final obfuscation step:
-1.  **Instruction Substitution**: It converts arithmetic and logic instructions
-(e.g., `add`, `sub`, `xor`) into `mov` sequences.
-2.  **Lookup Tables**: It calls `MemoryManager` to allocate static lookup tables
-(e.g., for addition or boolean logic) to perform computation via data movement.
-
----
-
-## 3. Testing
+## 2. Testing
 
 We use unit tests for modules only if it makes sense to do so. A lot of the
 parsing logic is unit tested since it tends to be the most error-prone. Some
@@ -160,7 +137,7 @@ uv run bash tests/e2e/run.sh
 
 **Note**: The E2E script automatically looks for `.s` files in `tests/e2e/samples/`.
 
-## 4. CI/CD
+## 3. CI/CD
 For all open PRs, there are automated checks for tests and other static analysis.
 You should ensure the code is formatted with `uvx ruff format`, tests don't fail,
 and `uvx ruff check` does not complain.
