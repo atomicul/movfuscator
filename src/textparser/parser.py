@@ -1,14 +1,16 @@
 import re
-from typing import Iterator, List, Optional, Set, Tuple, Union, assert_never
+from typing import Iterator, List, Optional, Set, Tuple, Union
 from .models import (
     BasicBlock,
     Instruction,
-    EdgeType,
     Function,
     Operand,
     RegisterOperand,
     ImmediateOperand,
     MemoryOperand,
+    DirectSuccessor,
+    ConditionalSuccessor,
+    JumpCondition,
 )
 from .expression import Expression
 
@@ -54,9 +56,20 @@ def extract_functions(blocks: List[BasicBlock]) -> List[Function]:
 
             visited.add(id(curr))
 
-            for succ_block, _ in curr.successors:
-                if id(succ_block) not in visited:
-                    queue.append(succ_block)
+            if curr.successor is None:
+                continue
+
+            match curr.successor:
+                case DirectSuccessor(next_blk):
+                    if id(next_blk) not in visited:
+                        queue.append(next_blk)
+                case ConditionalSuccessor(true_blk, false_blk, _):
+                    if id(true_blk) not in visited:
+                        queue.append(true_blk)
+                    if id(false_blk) not in visited:
+                        queue.append(false_blk)
+                case _:
+                    pass
 
     return functions
 
@@ -144,57 +157,31 @@ def parse_operand(text: str) -> Operand:
     Parses a single operand string into the appropriate Operand model.
     """
     text = text.strip()
-
-    # 1. Try Register
     try:
-        # RegisterOperand definitions include the '%' (e.g., "%eax")
         return RegisterOperand(text.lower())
     except ValueError:
         pass
 
-    # 2. Try Immediate
     if text.startswith("$"):
-        # Parse expression after '$'
         return ImmediateOperand(Expression.parse(text[1:]))
 
-    # 3. Memory (or Label/Direct Address)
-    # Syntax: displacement(base, index, scale)
-    # Regex Breakdown:
-    #   ^          Start
-    #   (.*?)      Group 1: Displacement (lazy match until parens)
-    #   (?:        Non-capturing group for parens part
-    #     \(       Literal '('
-    #     (.*)     Group 2: Content inside parens
-    #     \)       Literal ')'
-    #   )?         Parens part is optional
-    #   $          End
     match = re.match(r"^(.*?)(\((.*)\))?$", text)
     if not match:
-        # Fallback: Treat whole string as displacement expression
         return MemoryOperand(displacement=Expression.parse(text))
 
     disp_str, _, paren_content = match.groups()
-
     displacement = (
         Expression.parse(disp_str) if disp_str and disp_str.strip() else Expression(0)
     )
 
-    # If no parentheses (e.g. "Label"), it's just displacement
     if paren_content is None:
         return MemoryOperand(displacement=displacement)
 
-    # Parse (base, index, scale)
-    # Possible forms: (base), (base, index), (, index, scale), etc.
     sub_parts = [p.strip() for p in paren_content.split(",")]
-
     base = None
     index = None
     scale = 1
 
-    if len(sub_parts) > 3:
-        raise ValueError(f"Invalid memory operand format: {text}")
-
-    # Helper to parse register part
     def get_reg(s: str) -> Optional[RegisterOperand]:
         if not s:
             return None
@@ -202,25 +189,15 @@ def parse_operand(text: str) -> Operand:
 
     if len(sub_parts) >= 1:
         base = get_reg(sub_parts[0])
-
     if len(sub_parts) >= 2:
         index = get_reg(sub_parts[1])
-
     if len(sub_parts) == 3 and sub_parts[2]:
-        try:
-            scale = int(sub_parts[2])
-            if scale not in (1, 2, 4, 8):
-                raise ValueError
-        except ValueError:
-            raise ValueError(f"Invalid scale factor: {sub_parts[2]}")
+        scale = int(sub_parts[2])
 
     return MemoryOperand(base=base, index=index, scale=scale, displacement=displacement)
 
 
 def build_blocks(elements: Iterator[Union[str, Instruction]]) -> List[BasicBlock]:
-    """
-    Groups the stream of instructions and labels into `BasicBlock` objects.
-    """
     blocks: List[BasicBlock] = []
     current_block: Optional[BasicBlock] = None
 
@@ -242,48 +219,76 @@ def build_blocks(elements: Iterator[Union[str, Instruction]]) -> List[BasicBlock
 
                 if is_terminator(instr.mnemonic):
                     current_block = None
-
-            case x:
-                assert_never(x)
+            case _:
+                pass
 
     return blocks
 
 
 def link_blocks(blocks: List[BasicBlock]) -> None:
-    """
-    Connects BasicBlocks to form a Control Flow Graph (CFG).
-    """
     block_map = {b.name: b for b in blocks}
 
     for i, block in enumerate(blocks):
         if not block.instructions:
+            if i + 1 < len(blocks):
+                block.successor = DirectSuccessor(blocks[i + 1])
             continue
 
         last_instr = block.instructions[-1]
         mnem = last_instr.mnemonic.lower()
-        is_conditional = is_terminator(mnem) and not is_unconditional(mnem)
 
-        if is_terminator(mnem) and not is_return(mnem) and last_instr.operands:
-            # Extract target label string from the operand
+        terminates = is_terminator(mnem)
+        conditional = terminates and not is_unconditional(mnem)
+
+        # Resolve target block (the destination of the jump)
+        target_block = None
+        if terminates and not is_return(mnem) and last_instr.operands:
             target_op = last_instr.operands[0]
             target_label = None
-
             if isinstance(target_op, MemoryOperand):
-                # Standard branch: jmp Label -> MemoryOperand(disp="Label")
-                # We use the string representation of the expression (which reconstructs the label)
                 target_label = str(target_op.displacement)
             elif isinstance(target_op, ImmediateOperand):
-                # jmp $Label (rare for direct jumps, but possible)
                 target_label = str(target_op.value)
 
             if target_label and target_label in block_map:
-                edge_type = EdgeType.TAKEN if is_conditional else EdgeType.DIRECT
-                block.successors.append((block_map[target_label], edge_type))
+                target_block = block_map[target_label]
 
-        if not is_unconditional(mnem):
-            if i + 1 < len(blocks):
-                edge_type = EdgeType.NOT_TAKEN if is_conditional else EdgeType.DIRECT
-                block.successors.append((blocks[i + 1], edge_type))
+        # Resolve fallthrough block (the next physical block)
+        next_physical = blocks[i + 1] if i + 1 < len(blocks) else None
+
+        if conditional and target_block and next_physical:
+            try:
+                cond_enum, swap = JumpCondition.from_mnemonic(mnem)
+
+                if swap:
+                    # The jump condition was inverted (e.g. JNE).
+                    # JNE Target implies "True" for JNE, which means "False" for JE.
+                    # So the JNE-Target becomes the JE-False block.
+                    # The Fallthrough implies "False" for JNE, which means "True" for JE.
+                    # So the Fallthrough becomes the JE-True block.
+                    block.successor = ConditionalSuccessor(
+                        true_block=next_physical,
+                        false_block=target_block,
+                        condition=cond_enum,
+                    )
+                else:
+                    # Standard case (e.g. JE)
+                    block.successor = ConditionalSuccessor(
+                        true_block=target_block,
+                        false_block=next_physical,
+                        condition=cond_enum,
+                    )
+            except ValueError:
+                # If we can't parse the conditional jump, we treat it as a terminal failure
+                # or a gap in the graph logic. For now, we raise, but in a robust tool
+                # you might log and continue.
+                raise
+
+        elif is_unconditional(mnem) and not is_return(mnem) and target_block:
+            block.successor = DirectSuccessor(target_block)
+
+        elif not terminates and next_physical:
+            block.successor = DirectSuccessor(next_physical)
 
 
 def is_terminator(mnemonic: str) -> bool:
