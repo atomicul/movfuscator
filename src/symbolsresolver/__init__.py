@@ -7,8 +7,10 @@ from textparser import (
     MemoryOperand,
     RegisterOperand,
     BasicBlock,
-    EdgeType,
     Expression,
+    DirectSuccessor,
+    ConditionalSuccessor,
+    JumpCondition,
 )
 from .resolver import parse_cfg
 
@@ -22,7 +24,9 @@ __all__ = [
     "MemoryOperand",
     "RegisterOperand",
     "BasicBlock",
-    "EdgeType",
     "Expression",
     "parse_cfg",
+    "DirectSuccessor",
+    "ConditionalSuccessor",
+    "JumpCondition",
 ]

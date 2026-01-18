@@ -1,16 +1,7 @@
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import List, Tuple, Optional, Literal, Union
+from typing import List, Optional, Literal, Union, Tuple
 from .expression import Expression
-
-
-class EdgeType(str, Enum):
-    TAKEN = "taken"
-    NOT_TAKEN = "not_taken"
-    DIRECT = "direct"
-
-    def __str__(self) -> str:
-        return self.value
 
 
 class RegisterOperand(Enum):
@@ -50,12 +41,70 @@ class RegisterOperand(Enum):
         return self.value
 
 
+class JumpCondition(str, Enum):
+    """
+    Represents the canonical condition code for a branch.
+    Opposite conditions (e.g., JNE) are represented by JE
+    with the true/false blocks swapped.
+    """
+
+    JE = "je"  # Equal (Z=1). Covers: je, jz. (Opposites: jne, jnz)
+    JL = "jl"  # Less (SF!=OF). Covers: jl, jnge. (Opposites: jge, jnl)
+    JG = "jg"  # Greater (Z=0 & SF=OF). Covers: jg, jnle. (Opposites: jle, jng)
+    JB = "jb"  # Below (C=1). Covers: jb, jnae, jc. (Opposites: jae, jnb, jnc)
+    JA = "ja"  # Above (C=0 & Z=0). Covers: ja, jnbe. (Opposites: jbe, jna)
+
+    @classmethod
+    def from_mnemonic(cls, mnemonic: str) -> Tuple["JumpCondition", bool]:
+        """
+        Parses a jump mnemonic into a canonical JumpCondition and a swap flag.
+
+        Returns:
+            (JumpCondition, swap_branches):
+            If swap_branches is True, the instruction is an inverted jump (e.g. JNE),
+            meaning the 'Taken' path corresponds to the 'False' logical state of the
+            canonical condition (JE).
+
+        Raises:
+            ValueError: If the mnemonic is not a recognized conditional jump.
+        """
+        m = mnemonic.lower()
+
+        if m in ["je", "jz"]:
+            return cls.JE, False
+        if m in ["jne", "jnz"]:
+            return cls.JE, True
+
+        if m in ["jl", "jnge"]:
+            return cls.JL, False
+        if m in ["jge", "jnl"]:
+            return cls.JL, True
+
+        if m in ["jg", "jnle"]:
+            return cls.JG, False
+        if m in ["jle", "jng"]:
+            return cls.JG, True
+
+        if m in ["jb", "jnae", "jc"]:
+            return cls.JB, False
+        if m in ["jae", "jnb", "jnc"]:
+            return cls.JB, True
+
+        if m in ["ja", "jnbe"]:
+            return cls.JA, False
+        if m in ["jbe", "jna"]:
+            return cls.JA, True
+
+        raise ValueError(
+            f"Unknown or unsupported conditional jump mnemonic: {mnemonic}"
+        )
+
+
 @dataclass
 class ImmediateOperand:
     value: Expression
 
     def __str__(self) -> str:
-        # AT&T syntax requires immediate values to be prefixed with '$'
         return f"$({self.value})"
 
 
@@ -64,7 +113,7 @@ class MemoryOperand:
     base: Optional[RegisterOperand] = None
     index: Optional[RegisterOperand] = None
     scale: Literal[1, 2, 4, 8] = 1
-    displacement: Expression = Expression("0")
+    displacement: Expression = field(default_factory=lambda: Expression("0"))
 
     def __str__(self) -> str:
         if self.displacement == 0 and (self.base is not None or self.index is not None):
@@ -104,10 +153,22 @@ class Instruction:
 
 
 @dataclass
+class DirectSuccessor:
+    block: "BasicBlock"
+
+
+@dataclass
+class ConditionalSuccessor:
+    true_block: "BasicBlock"
+    false_block: "BasicBlock"
+    condition: JumpCondition
+
+
+@dataclass
 class BasicBlock:
     name: str
     instructions: List[Instruction] = field(default_factory=list)
-    successors: List[Tuple["BasicBlock", EdgeType]] = field(default_factory=list)
+    successor: Optional[Union[DirectSuccessor, ConditionalSuccessor]] = None
 
 
 @dataclass

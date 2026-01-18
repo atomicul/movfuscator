@@ -3,12 +3,14 @@ from typing import Iterator, List, Optional, Set, Tuple, Union, assert_never
 from .models import (
     BasicBlock,
     Instruction,
-    EdgeType,
     Function,
     Operand,
     RegisterOperand,
     ImmediateOperand,
     MemoryOperand,
+    DirectSuccessor,
+    ConditionalSuccessor,
+    JumpCondition,
 )
 from .expression import Expression
 
@@ -54,9 +56,20 @@ def extract_functions(blocks: List[BasicBlock]) -> List[Function]:
 
             visited.add(id(curr))
 
-            for succ_block, _ in curr.successors:
-                if id(succ_block) not in visited:
-                    queue.append(succ_block)
+            if curr.successor is None:
+                continue
+
+            match curr.successor:
+                case DirectSuccessor(next_blk):
+                    if id(next_blk) not in visited:
+                        queue.append(next_blk)
+                case ConditionalSuccessor(true_blk, false_blk, _):
+                    if id(true_blk) not in visited:
+                        queue.append(true_blk)
+                    if id(false_blk) not in visited:
+                        queue.append(false_blk)
+                case x:
+                    assert_never(x)
 
     return functions
 
@@ -227,11 +240,8 @@ def build_blocks(elements: Iterator[Union[str, Instruction]]) -> List[BasicBlock
     for item in elements:
         match item:
             case str(label_name):
-                if current_block and not current_block.instructions:
-                    current_block.name = label_name
-                else:
-                    current_block = BasicBlock(name=label_name)
-                    blocks.append(current_block)
+                current_block = BasicBlock(name=label_name)
+                blocks.append(current_block)
 
             case Instruction() as instr:
                 if current_block is None:
@@ -256,34 +266,87 @@ def link_blocks(blocks: List[BasicBlock]) -> None:
     block_map = {b.name: b for b in blocks}
 
     for i, block in enumerate(blocks):
+        # The block physically following the current one in the source code
+        next_physical = blocks[i + 1] if i + 1 < len(blocks) else None
+
+        # Empty blocks implicitly fall through to the next physical block
         if not block.instructions:
+            if next_physical:
+                block.successor = DirectSuccessor(next_physical)
             continue
 
         last_instr = block.instructions[-1]
         mnem = last_instr.mnemonic.lower()
-        is_conditional = is_terminator(mnem) and not is_unconditional(mnem)
 
-        if is_terminator(mnem) and not is_return(mnem) and last_instr.operands:
-            # Extract target label string from the operand
-            target_op = last_instr.operands[0]
-            target_label = None
+        terminates = is_terminator(mnem)
+        is_conditional = terminates and not is_unconditional(mnem)
 
-            if isinstance(target_op, MemoryOperand):
-                # Standard branch: jmp Label -> MemoryOperand(disp="Label")
-                # We use the string representation of the expression (which reconstructs the label)
-                target_label = str(target_op.displacement)
-            elif isinstance(target_op, ImmediateOperand):
-                # jmp $Label (rare for direct jumps, but possible)
-                target_label = str(target_op.value)
+        if not terminates:
+            if next_physical:
+                block.successor = DirectSuccessor(next_physical)
+            continue
 
-            if target_label and target_label in block_map:
-                edge_type = EdgeType.TAKEN if is_conditional else EdgeType.DIRECT
-                block.successors.append((block_map[target_label], edge_type))
+        # If the block terminates with a Return (ret, iret, syscall),
+        # it has no successors in the CFG. We do not attempt to resolve a jump target.
+        if is_return(mnem):
+            continue
 
-        if not is_unconditional(mnem):
-            if i + 1 < len(blocks):
-                edge_type = EdgeType.NOT_TAKEN if is_conditional else EdgeType.DIRECT
-                block.successors.append((blocks[i + 1], edge_type))
+        target_block = resolve_target_block(last_instr, block_map)
+
+        if is_conditional and next_physical:
+            block.successor = create_conditional_successor(
+                mnem, target_block, next_physical
+            )
+            block.instructions.pop()
+        elif is_unconditional(mnem) and not is_return(mnem):
+            block.successor = DirectSuccessor(target_block)
+            block.instructions.pop()
+
+
+def resolve_target_block(
+    instr: Instruction, block_map: dict[str, BasicBlock]
+) -> BasicBlock:
+    """
+    Parses the instruction's operands to find the target BasicBlock.
+    """
+    if not instr.operands:
+        raise ValueError("Unexpected jump instruction with no operands")
+
+    target_op = instr.operands[0]
+    target_label = None
+
+    if not isinstance(target_op, MemoryOperand):
+        raise TypeError("Unexpected operand type for jump instruction")
+
+    target_label = str(target_op.displacement)
+    target_block = block_map.get(target_label)
+
+    if target_block is None:
+        raise LookupError("Failed to find target block")
+
+    return target_block
+
+
+def create_conditional_successor(
+    mnemonic: str, target_block: BasicBlock, next_physical: BasicBlock
+) -> ConditionalSuccessor:
+    """
+    Creates a ConditionalSuccessor, handling the swapping logic for inverted jumps.
+    """
+    cond_enum, swap = JumpCondition.from_mnemonic(mnemonic)
+
+    if swap:
+        return ConditionalSuccessor(
+            true_block=next_physical,
+            false_block=target_block,
+            condition=cond_enum,
+        )
+    else:
+        return ConditionalSuccessor(
+            true_block=target_block,
+            false_block=next_physical,
+            condition=cond_enum,
+        )
 
 
 def is_terminator(mnemonic: str) -> bool:

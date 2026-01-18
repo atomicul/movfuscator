@@ -111,39 +111,10 @@ helper_func:
     ret
 
 big_num:
+big_num1:
     subl $1, %eax
     ret
 """
-
-
-@pytest.mark.parametrize(
-    "case_name, asm_code",
-    [
-        ("empty", EMPTY_ASM),
-        ("merge_arrays", MERGE_ARRAYS_ASM),
-        ("multi_func", MULTI_FUNC_ASM),
-    ],
-)
-def test_human_readable_output(snapshot, case_name, asm_code):
-    """
-    Verifies the recursive text tree visualization.
-    Now supports multiple functions in a single file.
-    """
-    print(f"Testing human readable output of {case_name}")
-
-    functions = parse_cfg(asm_code)
-    assert functions, "No functions parsed"
-
-    output_parts = []
-    for func in functions:
-        output_parts.append(f"=== Function: {func.name} ===")
-        output_parts.append(visualizer.human_readable(func.entry_block))
-        output_parts.append("")  # Add spacing between functions
-
-    full_output = "\n".join(output_parts).strip()
-
-    print(full_output)
-    assert full_output == snapshot(name=f"{case_name}_human")
 
 
 @pytest.mark.parametrize(

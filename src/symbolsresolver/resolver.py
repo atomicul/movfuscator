@@ -1,4 +1,4 @@
-from typing import Iterable, List, Dict, Optional, Set, Union
+from typing import Iterable, List, Dict, Optional, Set, Union, assert_never
 from itertools import chain
 from dataparser import Allocator, parse_data
 from textparser import (
@@ -9,6 +9,8 @@ from textparser import (
     ImmediateOperand,
     MemoryOperand,
     Expression,
+    DirectSuccessor,
+    ConditionalSuccessor,
 )
 from textparser import parse_cfg as parse_text_cfg
 
@@ -58,8 +60,17 @@ def instructions(
 
     yield from func.instructions
 
-    for adjacent_block in map(lambda x: x[0], func.successors):
-        yield from instructions(adjacent_block, visited=visited)
+    if func.successor is None:
+        return
+
+    match func.successor:
+        case DirectSuccessor(next_blk):
+            yield from instructions(next_blk, visited=visited)
+        case ConditionalSuccessor(true_blk, false_blk, _):
+            yield from instructions(true_blk, visited=visited)
+            yield from instructions(false_blk, visited=visited)
+        case x:
+            assert_never(x)
 
 
 def resolve_instruction(

@@ -15,14 +15,13 @@
       movl %esp, %ebp
       movl 8(%ebp), %eax
       cmpl $(0), %eax
-      jge end_abs
-      jmp loc_27
+      jl loc_27
+      jmp end_abs
+  loc_27:
+      negl %eax
   end_abs:
       popl %ebp
       ret
-  loc_27:
-      negl %eax
-      jmp end_abs
   
   .global main
   main:
@@ -58,11 +57,8 @@
       movl __GLOBAL_MEM, %eax
   check_loop:
       cmpl __GLOBAL_MEM+4, %eax
-      jge exit_block
-      jmp body
-  exit_block:
-      xorl %eax, %eax
-      ret
+      jl body
+      jmp exit_block
   body:
       pushl %eax
       pushl $(__GLOBAL_MEM+8)
@@ -72,6 +68,9 @@
       incl %eax
       movl %eax, __GLOBAL_MEM
       jmp check_loop
+  exit_block:
+      xorl %eax, %eax
+      ret
   
   '''
 # ---
@@ -97,12 +96,8 @@
       xorl %esi, %esi
   process_loop:
       cmpl __GLOBAL_MEM+60, %esi
-      jge end_main
-      jmp loc_23
-  end_main:
-      xorl %eax, %eax
-      leave
-      ret
+      jl loc_23
+      jmp end_main
   loc_23:
       movl __GLOBAL_MEM+40(,%esi,4), %eax
       cmpl $(8), %eax
@@ -122,6 +117,61 @@
       call printf
       addl $(8), %esp
       jmp next_iter
+  end_main:
+      xorl %eax, %eax
+      leave
+      ret
+  
+  '''
+# ---
+# name: test_e2e_transformation_snapshot[syscall.s][syscall_obfuscated]
+  '''
+  .section .data
+  __GLOBAL_MEM:
+      .asciz "maria" # x1 (+0)
+      .zero 2 # __pad_6 (+6)
+      .asciz "maria1" # x2 (+8)
+      .zero 1 # __pad_15 (+15)
+      .asciz "maria2" # x3 (+16)
+  
+  .section .text
+  
+  .global main
+  main:
+      mov $(4), %eax
+      mov $(1), %ebx
+      mov $(__GLOBAL_MEM), %ecx
+      mov $(14), %edx
+      int $(128)
+  end:
+      movl $(1), %eax
+      xor %ebx, %ebx
+      int $(128)
+  
+  '''
+# ---
+# name: test_e2e_transformation_snapshot[syscall2.s][syscall2_obfuscated]
+  '''
+  .section .data
+  __GLOBAL_MEM:
+      .asciz "maria" # x1 (+0)
+      .zero 2 # __pad_6 (+6)
+      .int 1634165602 # x2 (+8)
+      .asciz "maria2" # x3 (+12)
+  
+  .section .text
+  
+  .global main
+  main:
+      mov $(4), %eax
+      mov $(1), %ebx
+      mov $(__GLOBAL_MEM), %ecx
+      mov $(14), %edx
+      int $(128)
+  end:
+      movl $(1), %eax
+      xor %ebx, %ebx
+      int $(128)
   
   '''
 # ---

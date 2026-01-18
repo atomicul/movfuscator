@@ -60,8 +60,9 @@ def parse_directive(
 
     if directive in [".int", ".long"]:
         # TYPE FIX: Explicitly annotate as List[Union[int, float]]
+        # Use int(x, 0) to auto-detect base (e.g. 0x123 vs 123)
         int_values: List[Union[int, float]] = [
-            int(x.strip()) for x in args_str.split(",") if x.strip()
+            int(x.strip(), 0) for x in args_str.split(",") if x.strip()
         ]
 
         if not int_values:
@@ -94,7 +95,7 @@ def parse_directive(
 
     elif directive in [".zero", ".space", ".skip"]:
         try:
-            size = int(args_str.split()[0])
+            size = int(args_str.split()[0], 0)
             return allocator.allocate_empty(size, name=label_name)
         except (ValueError, IndexError):
             return None
