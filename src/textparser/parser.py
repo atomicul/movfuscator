@@ -114,7 +114,7 @@ def parse_elements(
             continue
 
         parts = line.split(maxsplit=1)
-        mnemonic = parts[0]
+        mnemonic = parts[0].lower()
 
         if mnemonic.startswith("."):
             continue  # do not parse assembler directives
