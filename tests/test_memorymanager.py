@@ -22,6 +22,13 @@ def test_allocate_basic_types():
     assert alloc_str.offset == 8
     assert alloc_str.size == 6
 
+    # 4. Bytes (raw bytes, no null terminator)
+    # b"Hi" = 2 bytes
+    alloc_bytes = mm.allocate_data(b"Hi", "var_bytes")
+    assert alloc_bytes.offset == 16  # 8 + 6 = 14, aligned to 16
+    assert alloc_bytes.size == 2
+    assert alloc_bytes.directive == ".ascii"
+
 
 def test_allocate_lists():
     """Verifies allocation for homogeneous lists."""
@@ -102,6 +109,9 @@ def test_data_section_snapshot(snapshot):
 
     # 5. List of Floats
     mm.allocate_data([1.1, 2.2, 3.3], "coefficients")
+
+    # 6. Raw Bytes
+    mm.allocate_data(b"\x00\x01\x02", "raw_data")
 
     generated_asm = "\n".join(str(alloc) for alloc in mm.allocations)
 

@@ -32,12 +32,17 @@ class StubMemoryManager:
         return DummyAllocation(offset=self._allocation_counter * 10, size=4)
 
     def allocate_data(
-        self, value: Union[int, float, str, List[Union[int, float]]], name: str
+        self,
+        value: Union[int, float, str, bytes, List[Union[int, float]]],
+        name: str,
+        enforce_alignment: bool = True,
     ) -> DummyAllocation:
         self.calls.append(("allocate_data", value, name))
         return self._create_dummy()
 
-    def allocate_empty(self, size: int, name: str) -> DummyAllocation:
+    def allocate_empty(
+        self, size: int, name: str, enforce_alignment: bool = True
+    ) -> DummyAllocation:
         self.calls.append(("allocate_empty", size, name))
         return self._create_dummy()
 

@@ -7,5 +7,6 @@
   .int 99 # next_val (+8)
   .zero 16 # scratch_pad (+12)
   .float 1.1, 2.2, 3.3 # coefficients (+28)
+  .ascii "\x00\x01\x02" # raw_data (+40)
   '''
 # ---

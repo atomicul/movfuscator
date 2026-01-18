@@ -18,7 +18,7 @@ class Allocation:
         cls,
         name: str,
         offset: int,
-        value: Union[int, float, str, List[Union[int, float]]],
+        value: Union[int, float, str, bytes, List[Union[int, float]]],
     ) -> "Allocation":
         """Factory method to create a data-initialized allocation."""
         if isinstance(value, list) and not value:
@@ -52,6 +52,8 @@ class Allocation:
                 return 4
             case str(v):
                 return len(v) + 1
+            case bytes(v):
+                return len(v)
             case list(items):
                 return len(items) * 4
             case x:
@@ -69,6 +71,8 @@ class Allocation:
                 return ".float"
             case str():
                 return ".asciz"
+            case bytes():
+                return ".ascii"
             case list(items):
                 # If any item is a float, the whole list is treated as floats
                 if any(isinstance(x, float) for x in items):
@@ -92,6 +96,15 @@ class Allocation:
                 return str(v)
             case str(v):
                 return f'"{v}"'
+            case bytes(v):
+                # repr(b'foo') -> "b'foo'". We strip the b and the outer quotes, then wrap in double quotes.
+                # This safely handles escapes like \n or \x00.
+                s = repr(v)
+                if s.startswith("b'") and s.endswith("'"):
+                    return f'"{s[2:-1]}"'
+                if s.startswith('b"') and s.endswith('"'):
+                    return f'"{s[2:-1]}"'
+                return f'"{v.decode("latin-1")}"'
             case list(items):
                 return ", ".join(str(x) for x in items)
             case x:
@@ -101,7 +114,7 @@ class Allocation:
         return f"Allocation(name='{self._name}', offset={self._offset}, value={self._value})"
 
 
-InternalValueType = Union[int, float, str, List[Union[int, float]], "EmptyValue"]
+InternalValueType = Union[int, float, str, bytes, List[Union[int, float]], "EmptyValue"]
 
 
 @dataclass

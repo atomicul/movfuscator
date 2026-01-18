@@ -80,12 +80,10 @@
   __GLOBAL_MEM:
       .asciz "Value %d is High
   " # msg_high (+0)
-      .zero 2 # __pad_18 (+18)
       .asciz "Value %d is Low
-  " # msg_low (+20)
-      .zero 3 # __pad_37 (+37)
-      .int 10, 2, 8, 20, 5 # values (+40)
-      .int 5 # count (+60)
+  " # msg_low (+18)
+      .int 10, 2, 8, 20, 5 # values (+35)
+      .int 5 # count (+55)
   
   .section .text
   
@@ -95,11 +93,11 @@
       movl %esp, %ebp
       xorl %esi, %esi
   process_loop:
-      cmpl __GLOBAL_MEM+60, %esi
+      cmpl __GLOBAL_MEM+55, %esi
       jl loc_23
       jmp end_main
   loc_23:
-      movl __GLOBAL_MEM+40(,%esi,4), %eax
+      movl __GLOBAL_MEM+35(,%esi,4), %eax
       cmpl $(8), %eax
       jg is_high
       jmp is_low
@@ -113,7 +111,7 @@
       jmp process_loop
   is_low:
       pushl %eax
-      pushl $(__GLOBAL_MEM+20)
+      pushl $(__GLOBAL_MEM+18)
       call printf
       addl $(8), %esp
       jmp next_iter
@@ -128,11 +126,9 @@
   '''
   .section .data
   __GLOBAL_MEM:
-      .asciz "maria" # x1 (+0)
-      .zero 2 # __pad_6 (+6)
-      .asciz "maria1" # x2 (+8)
-      .zero 1 # __pad_15 (+15)
-      .asciz "maria2" # x3 (+16)
+      .ascii "maria" # x1 (+0)
+      .ascii "maria1" # x2 (+5)
+      .ascii "maria2" # x3 (+11)
   
   .section .text
   
@@ -154,10 +150,9 @@
   '''
   .section .data
   __GLOBAL_MEM:
-      .asciz "maria" # x1 (+0)
-      .zero 2 # __pad_6 (+6)
-      .int 1634165602 # x2 (+8)
-      .asciz "maria2" # x3 (+12)
+      .ascii "maria" # x1 (+0)
+      .int 1634165602 # x2 (+5)
+      .ascii "maria2" # x3 (+9)
   
   .section .text
   
