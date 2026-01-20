@@ -124,7 +124,52 @@ def parse_elements(
             raw_operands = split_operands_source(parts[1])
             operands = [parse_operand(op) for op in raw_operands]
 
+        mnemonic = infer_suffix(mnemonic, operands)
+
         yield Instruction(mnemonic, operands, line_number=line_num)
+
+
+def infer_suffix(mnemonic: str, operands: List[Operand]) -> str:
+    """
+    Infers the correct AT&T suffix (b, w, l) based on operand size if the mnemonic
+    is generic (e.g., 'mov', 'add').
+    """
+    # Instructions that commonly require size suffixes in AT&T syntax
+    GENERIC_MNEMONICS = {
+        "mov",
+        "add",
+        "sub",
+        "inc",
+        "dec",
+        "cmp",
+        "xor",
+        "or",
+        "and",
+        "test",
+        "sal",
+        "sar",
+        "shl",
+        "shr",
+        "not",
+        "neg",
+        "push",
+        "pop",
+    }
+
+    if mnemonic not in GENERIC_MNEMONICS:
+        return mnemonic
+
+    register_operand = next(
+        (op for op in operands if isinstance(op, RegisterOperand)), None
+    )
+
+    size_bytes = register_operand.byte_size if register_operand is not None else 4
+
+    suffix_map = {1: "b", 2: "w", 4: "l"}
+
+    suffix = suffix_map.get(size_bytes, "l")
+
+    return mnemonic + suffix
 
 
 def split_operands_source(text: str) -> List[str]:

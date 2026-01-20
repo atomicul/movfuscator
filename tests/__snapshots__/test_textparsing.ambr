@@ -5,19 +5,19 @@
   digraph asm_flow {
       node [shape=box fontname="Courier"];
       // Edge definitions: Green=Condition Met (e.g. je), Red=Condition Not Met (e.g. jne)
-      "func_mix_32_16" [label="func_mix_32_16\n----------------\nmov %eax, %ebx\lxor %ecx, %edx\l"];
+      "func_mix_32_16" [label="func_mix_32_16\n----------------\nmovl %eax, %ebx\lxorl %ecx, %edx\l"];
       "func_mix_32_16" -> "block_16bit" [color="black"];
-      "block_16bit" [label="block_16bit\n----------------\nadd %ax, %bx\lsub %si, %di\lret\l"];
+      "block_16bit" [label="block_16bit\n----------------\naddw %ax, %bx\lsubw %si, %di\lret\l"];
   }
   
   // --- Function: func_mix_8_mem ---
   digraph asm_flow {
       node [shape=box fontname="Courier"];
       // Edge definitions: Green=Condition Met (e.g. je), Red=Condition Not Met (e.g. jne)
-      "func_mix_8_mem" [label="func_mix_8_mem\n----------------\ncmp %al, %bl\linc %ah\l"];
+      "func_mix_8_mem" [label="func_mix_8_mem\n----------------\ncmpb %al, %bl\lincb %ah\l"];
       "func_mix_8_mem" -> "block_mem_imm" [color="green" label="je" fontcolor="green"];
       "func_mix_8_mem" -> "loc_27" [color="red" label="jne" fontcolor="red"];
-      "block_mem_imm" [label="block_mem_imm\n----------------\nmov $(42), 0(%edi)\lret\l"];
+      "block_mem_imm" [label="block_mem_imm\n----------------\nmovl $(42), 0(%edi)\lret\l"];
       "loc_27" [label="loc_27\n----------------\nret\l"];
   }
   '''
