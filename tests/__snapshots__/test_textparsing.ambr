@@ -1,4 +1,27 @@
 # serializer version: 1
+# name: test_dot_graph_output[all_registers-\n.text\n.global func_mix_32_16\n.global func_mix_8_mem\n\nfunc_mix_32_16:\n    # Block 1 (Entry): 32-bit operations\n    mov %eax, %ebx\n    xor %ecx, %edx\n    \n    # Unconditional jump to force a new basic block\n    jmp block_16bit\n\nblock_16bit:\n    # Block 2 (Successor): 16-bit operations\n    add %ax, %bx\n    sub %si, %di\n    ret\n\nfunc_mix_8_mem:\n    # Block 1 (Entry): 8-bit operations\n    cmp %al, %bl\n    inc %ah\n    \n    # Conditional jump to force branching\n    je block_mem_imm\n    ret\n\nblock_mem_imm:\n    # Block 2 (Conditional Branch): Immediate to memory\n    # Should default to long (32-bit) without suffix\n    mov $42, (%edi)\n    ret\n][all_registers_dot]
+  '''
+  // --- Function: func_mix_32_16 ---
+  digraph asm_flow {
+      node [shape=box fontname="Courier"];
+      // Edge definitions: Green=Condition Met (e.g. je), Red=Condition Not Met (e.g. jne)
+      "func_mix_32_16" [label="func_mix_32_16\n----------------\nmov %eax, %ebx\lxor %ecx, %edx\l"];
+      "func_mix_32_16" -> "block_16bit" [color="black"];
+      "block_16bit" [label="block_16bit\n----------------\nadd %ax, %bx\lsub %si, %di\lret\l"];
+  }
+  
+  // --- Function: func_mix_8_mem ---
+  digraph asm_flow {
+      node [shape=box fontname="Courier"];
+      // Edge definitions: Green=Condition Met (e.g. je), Red=Condition Not Met (e.g. jne)
+      "func_mix_8_mem" [label="func_mix_8_mem\n----------------\ncmp %al, %bl\linc %ah\l"];
+      "func_mix_8_mem" -> "block_mem_imm" [color="green" label="je" fontcolor="green"];
+      "func_mix_8_mem" -> "loc_27" [color="red" label="jne" fontcolor="red"];
+      "block_mem_imm" [label="block_mem_imm\n----------------\nmov $(42), 0(%edi)\lret\l"];
+      "loc_27" [label="loc_27\n----------------\nret\l"];
+  }
+  '''
+# ---
 # name: test_dot_graph_output[empty-\n.data\n    .float 1\nbuff: .space 1024\n.text\n_start:\n    ret\n][empty_dot]
   '''
   // --- Function: _start ---
@@ -9,7 +32,7 @@
   }
   '''
 # ---
-# name: test_dot_graph_output[merge_arrays-\n.text\n.global merge_arrays\n.equ SAVED_REGISTERS, 3\n.equ src1, SAVED_REGISTERS*4 + 4\n.equ len1, src1+4\n.equ src2, len1+4\n.equ len2, src2+4\n.equ dest, len2+4\nmerge_arrays:\n    pushl %ebp\n    pushl %esi\n    pushl %edi\n    movl  %esp, %ebp\n\n    xorl %esi,   %esi # src1Counter\n    xorl %edi, %edi # src2Counter\n    xorl %edx, %edx # destCounter\n\nloop:\n    cmpl len1(%ebp), %esi\n    jge  pick2\n\n\n    cmpl len2(%ebp), %edi\n    jge  pick1\n\n    movl src1(%ebp), %eax // another comment\n    movl (%eax, %esi, 4), %ecx # random comment\n\n    movl src2(%ebp), %eax\n    cmpl (%eax, %edi, 4), %ecx\n\n    jge pick2\n\npick1:\n    cmpl len1(%ebp), %esi\n    jge  return\n\n    movl src1(%ebp), %eax\n    movl (%eax, %esi, 4), %ecx\n\n    movl dest(%ebp), %eax\n    movl %ecx, (%eax, %edx, 4)\n    \n    incl %esi\n    incl %edx\n    jmp  loop\n\npick2:\n    cmpl len2(%ebp), %edi\n    jge  return\n\n    movl src2(%ebp), %eax\n    movl (%eax, %edi, 4), %ecx\n\n    movl dest(%ebp), %eax\n    movl %ecx, (%eax, %edx, 4)\n    \n    incl %edi\n    incl %edx\n    jmp  loop\n\nreturn:\n    movl %ebp, %esp\n    popl %edi\n    popl %esi\n    popl %ebp\n    ret\n][merge_arrays_dot]
+# name: test_dot_graph_output[merge_arrays-\n.text\n.global merge_arrays\n.equ SAVED_REGISTERS, 3\n.equ src1, SAVED_REGISTERS*4 + 4\n.equ len1, src1+4\n.equ src2, len1+4\n.equ len2, src2+4\n.equ dest, len2+4\nmerge_arrays:\n    pushl %ebp\n    pushl %esi\n    pushl %edi\n    MOVL  %esp, %ebp\n\n    XORL %esi,   %esi # src1Counter\n    xorl %edi, %edi # src2Counter\n    xorl %edx, %edx # destCounter\n\nloop:\n    cmpl len1(%ebp), %esi\n    jge  pick2\n\n\n    cmpl len2(%ebp), %edi\n    jge  pick1\n\n    movl src1(%ebp), %eax // another comment\n    movl (%eax, %esi, 4), %ecx # random comment\n\n    movl src2(%ebp), %eax\n    cmpl (%eax, %edi, 4), %ecx\n\n    jge pick2\n\npick1:\n    cmpl len1(%ebp), %esi\n    jge  return\n\n    movl src1(%ebp), %eax\n    movl (%eax, %esi, 4), %ecx\n\n    movl dest(%ebp), %eax\n    movl %ecx, (%eax, %edx, 4)\n    \n    incl %esi\n    incl %edx\n    jmp  loop\n\npick2:\n    cmpl len2(%ebp), %edi\n    jge  return\n\n    movl src2(%ebp), %eax\n    movl (%eax, %edi, 4), %ecx\n\n    movl dest(%ebp), %eax\n    movl %ecx, (%eax, %edx, 4)\n    \n    incl %edi\n    incl %edx\n    jmp  loop\n\nreturn:\n    movl %ebp, %esp\n    popl %edi\n    popl %esi\n    popl %ebp\n    ret\n][merge_arrays_dot]
   '''
   // --- Function: merge_arrays ---
   digraph asm_flow {
@@ -32,10 +55,10 @@
       "pick1" [label="pick1\n----------------\ncmpl len1(%ebp), %esi\l"];
       "pick1" -> "loc_40" [color="green" label="jl" fontcolor="green"];
       "pick1" -> "return" [color="red" label="jge" fontcolor="red"];
-      "loc_54" [label="loc_54\n----------------\nmovl src2(%ebp), %eax\lmovl 0(%eax,%edi,4), %ecx\lmovl dest(%ebp), %eax\lmovl %ecx, 0(%eax,%edx,4)\lincl %edi\lincl %edx\ljmp loop\l"];
+      "loc_54" [label="loc_54\n----------------\nmovl src2(%ebp), %eax\lmovl 0(%eax,%edi,4), %ecx\lmovl dest(%ebp), %eax\lmovl %ecx, 0(%eax,%edx,4)\lincl %edi\lincl %edx\l"];
       "loc_54" -> "loop" [color="black"];
       "return" [label="return\n----------------\nmovl %ebp, %esp\lpopl %edi\lpopl %esi\lpopl %ebp\lret\l"];
-      "loc_40" [label="loc_40\n----------------\nmovl src1(%ebp), %eax\lmovl 0(%eax,%esi,4), %ecx\lmovl dest(%ebp), %eax\lmovl %ecx, 0(%eax,%edx,4)\lincl %esi\lincl %edx\ljmp loop\l"];
+      "loc_40" [label="loc_40\n----------------\nmovl src1(%ebp), %eax\lmovl 0(%eax,%esi,4), %ecx\lmovl dest(%ebp), %eax\lmovl %ecx, 0(%eax,%edx,4)\lincl %esi\lincl %edx\l"];
       "loc_40" -> "loop" [color="black"];
   }
   '''
