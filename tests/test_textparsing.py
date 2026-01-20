@@ -203,6 +203,42 @@ CASE_IDS = [case[0] for case in TEST_CASES]
 CASE_CODE = [case[1] for case in TEST_CASES]
 
 
+ALL_REGISTERS_ASM = """
+.text
+.global func_mix_32_16
+.global func_mix_8_mem
+
+func_mix_32_16:
+    # Block 1 (Entry): 32-bit operations
+    mov %eax, %ebx
+    xor %ecx, %edx
+    
+    # Unconditional jump to force a new basic block
+    jmp block_16bit
+
+block_16bit:
+    # Block 2 (Successor): 16-bit operations
+    add %ax, %bx
+    sub %si, %di
+    ret
+
+func_mix_8_mem:
+    # Block 1 (Entry): 8-bit operations
+    cmp %al, %bl
+    inc %ah
+    
+    # Conditional jump to force branching
+    je block_mem_imm
+    ret
+
+block_mem_imm:
+    # Block 2 (Conditional Branch): Immediate to memory
+    # Should default to long (32-bit) without suffix
+    mov $42, (%edi)
+    ret
+"""
+
+
 def collect_instructions(func: Function):
     """Helper to traverse CFG and collect all instructions from all blocks."""
     visited: Set[int] = set()
@@ -252,48 +288,88 @@ def test_dot_graph_output(snapshot, case_name, asm_code):
 @pytest.mark.parametrize("asm_code", CASE_CODE, ids=CASE_IDS)
 def test_no_jumps_in_blocks(asm_code):
     """
-    Checks that ALL jump instructions (conditional and unconditional) are removed 
+    Checks that ALL jump instructions (conditional and unconditional) are removed
     from the basic block instruction lists and moved to the CFG edges.
     """
     functions = parse_cfg(asm_code)
-    
+
     for func in functions:
         instrs = collect_instructions(func)
-        
+
         # Ensure we actually found instructions to test (except for very empty functions)
         assert len(instrs) > 0
 
         for instr in instrs:
             # Logic: No jumps allowed at all.
             # 'ret', 'call' are allowed. 'jmp' and conditional jumps are not.
-            assert not instr.mnemonic.startswith("j"), \
+            assert not instr.mnemonic.startswith("j"), (
                 f"Found jump '{instr.mnemonic}' in block instructions. It should be removed."
+            )
 
 
 @pytest.mark.parametrize("case_name, asm_code", TEST_CASES, ids=CASE_IDS)
 def test_mnemonics_are_lowercase(case_name, asm_code):
     """
     Checks that mnemonics are normalized to lowercase.
-    Also specifically validates that the uppercase instructions in MERGE_ARRAYS_ASM 
+    Also specifically validates that the uppercase instructions in MERGE_ARRAYS_ASM
     were correctly converted.
     """
     functions = parse_cfg(asm_code)
-    
+
     for func in functions:
         instrs = collect_instructions(func)
         assert len(instrs) > 0
-        
+
         for instr in instrs:
-            assert instr.mnemonic.islower(), \
+            assert instr.mnemonic.islower(), (
                 f"Mnemonic '{instr.mnemonic}' is not lowercase"
+            )
 
     # Specific check for the uppercase instructions we inserted into MERGE_ARRAYS_ASM
     if case_name == "merge_arrays":
         all_mnemonics = set()
         for func in functions:
             all_mnemonics.update(i.mnemonic for i in collect_instructions(func))
-            
+
         assert "movl" in all_mnemonics
         assert "xorl" in all_mnemonics
         assert "MOVL" not in all_mnemonics
         assert "XORL" not in all_mnemonics
+
+
+@pytest.mark.parametrize("asm_code", CASE_CODE, ids=CASE_IDS)
+def test_mnemonics_have_suffixes(asm_code):
+    """
+    Verifies that no instruction remains as a 'bare' base mnemonic
+    (e.g., 'mov', 'add') and that suffixes have been applied.
+    """
+    # Hardcoded list of instructions that must always have a suffix in the final output
+    must_have_suffix = {
+        "mov",
+        "add",
+        "sub",
+        "inc",
+        "dec",
+        "cmp",
+        "xor",
+        "or",
+        "and",
+        "test",
+        "sal",
+        "sar",
+        "shl",
+        "shr",
+        "not",
+        "neg",
+        "push",
+        "pop",
+    }
+
+    functions = parse_cfg(asm_code)
+
+    for func in functions:
+        instrs = collect_instructions(func)
+        for instr in instrs:
+            assert instr.mnemonic not in must_have_suffix, (
+                f"Found bare mnemonic '{instr.mnemonic}' without suffix in function '{func.name}'"
+            )

@@ -37,6 +37,19 @@ class RegisterOperand(Enum):
     CH = "%ch"
     DH = "%dh"
 
+    @property
+    def byte_size(self) -> int:
+        """Returns the size of the register in bytes (1, 2, or 4)."""
+        name = self.name
+
+        if name.startswith("E"):
+            return 4
+
+        if name in ["AL", "BL", "CL", "DL", "AH", "BH", "CH", "DH"]:
+            return 1
+
+        return 2
+
     def __str__(self) -> str:
         return self.value
 
