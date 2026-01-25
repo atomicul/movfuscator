@@ -26,7 +26,8 @@ def preprocess_cfg(asm: str, allocator: Allocator, data_label: str) -> List[Func
 
     resolve_symbols(functions, symbol_offsets, data_label)
 
-    expand_stack_ops(functions)
+    scratch = allocator.allocate_data(0, "scratch").offset
+    expand_stack_ops(functions, scratch, data_label)
 
     inject_context_switching(functions, allocator, data_label)
 

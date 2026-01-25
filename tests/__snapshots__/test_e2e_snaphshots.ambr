@@ -6,61 +6,68 @@
       .asciz "Absolute value of %d is %d
   " # fmt (+0)
       .int -42 # val (+28)
-      .int 0 # EAX (+32)
-      .int 0 # EBX (+36)
-      .int 0 # ECX (+40)
-      .int 0 # EDX (+44)
-      .int 0 # ESI (+48)
-      .int 0 # EDI (+52)
-      .int 0 # EBP (+56)
-      .int 0 # ESP (+60)
+      .int 0 # scratch (+32)
+      .int 0 # EAX (+36)
+      .int 0 # EBX (+40)
+      .int 0 # ECX (+44)
+      .int 0 # EDX (+48)
+      .int 0 # ESI (+52)
+      .int 0 # EDI (+56)
+      .int 0 # EBP (+60)
+      .int 0 # ESP (+64)
   
   .section .text
   
   .global abs_val
   abs_val:
-      movl __GLOBAL_MEM+32, %eax
-      movl __GLOBAL_MEM+56, %ebp
-      movl __GLOBAL_MEM+60, %esp
+      movl __GLOBAL_MEM+36, %eax
+      movl __GLOBAL_MEM+60, %ebp
+      movl __GLOBAL_MEM+64, %esp
       subl $(4), %esp
       movl %ebp, 0(%esp)
       movl %esp, %ebp
       movl 8(%ebp), %eax
       cmpl $(0), %eax
-      movl %eax, __GLOBAL_MEM+32
-      movl %ebp, __GLOBAL_MEM+56
-      movl %esp, __GLOBAL_MEM+60
+      movl %eax, __GLOBAL_MEM+36
+      movl %ebp, __GLOBAL_MEM+60
+      movl %esp, __GLOBAL_MEM+64
       jl loc_27
       jmp end_abs
   loc_27:
-      movl __GLOBAL_MEM+32, %eax
+      movl __GLOBAL_MEM+36, %eax
       negl %eax
-      movl %eax, __GLOBAL_MEM+32
+      movl %eax, __GLOBAL_MEM+36
   end_abs:
-      movl __GLOBAL_MEM+56, %ebp
-      movl __GLOBAL_MEM+60, %esp
+      movl __GLOBAL_MEM+60, %ebp
+      movl __GLOBAL_MEM+64, %esp
       movl 0(%esp), %ebp
       addl $(4), %esp
       ret
-      movl %ebp, __GLOBAL_MEM+56
-      movl %esp, __GLOBAL_MEM+60
+      movl %ebp, __GLOBAL_MEM+60
+      movl %esp, __GLOBAL_MEM+64
   
   .global main
   main:
-      movl __GLOBAL_MEM+32, %eax
-      movl __GLOBAL_MEM+56, %ebp
-      movl __GLOBAL_MEM+60, %esp
+      movl __GLOBAL_MEM+36, %eax
+      movl __GLOBAL_MEM+60, %ebp
+      movl __GLOBAL_MEM+64, %esp
       subl $(4), %esp
       movl %ebp, 0(%esp)
       movl %esp, %ebp
+      movl %eax, __GLOBAL_MEM+32
+      movl __GLOBAL_MEM+28, %eax
       subl $(4), %esp
-      movl __GLOBAL_MEM+28, 0(%esp)
+      movl %eax, 0(%esp)
+      movl __GLOBAL_MEM+32, %eax
       call abs_val
       addl $(4), %esp
       subl $(4), %esp
       movl %eax, 0(%esp)
+      movl %eax, __GLOBAL_MEM+32
+      movl __GLOBAL_MEM+28, %eax
       subl $(4), %esp
-      movl __GLOBAL_MEM+28, 0(%esp)
+      movl %eax, 0(%esp)
+      movl __GLOBAL_MEM+32, %eax
       subl $(4), %esp
       movl $(__GLOBAL_MEM), 0(%esp)
       call printf
@@ -68,9 +75,9 @@
       xorl %eax, %eax
       leave
       ret
-      movl %eax, __GLOBAL_MEM+32
-      movl %ebp, __GLOBAL_MEM+56
-      movl %esp, __GLOBAL_MEM+60
+      movl %eax, __GLOBAL_MEM+36
+      movl %ebp, __GLOBAL_MEM+60
+      movl %esp, __GLOBAL_MEM+64
   
   '''
 # ---
@@ -82,31 +89,32 @@
       .int 5 # limit (+4)
       .asciz "%d
   " # fmtstr (+8)
-      .int 0 # EAX (+12)
-      .int 0 # EBX (+16)
-      .int 0 # ECX (+20)
-      .int 0 # EDX (+24)
-      .int 0 # ESI (+28)
-      .int 0 # EDI (+32)
-      .int 0 # EBP (+36)
-      .int 0 # ESP (+40)
+      .int 0 # scratch (+12)
+      .int 0 # EAX (+16)
+      .int 0 # EBX (+20)
+      .int 0 # ECX (+24)
+      .int 0 # EDX (+28)
+      .int 0 # ESI (+32)
+      .int 0 # EDI (+36)
+      .int 0 # EBP (+40)
+      .int 0 # ESP (+44)
   
   .section .text
   
   .global main
   main:
-      movl __GLOBAL_MEM+12, %eax
+      movl __GLOBAL_MEM+16, %eax
       movl __GLOBAL_MEM, %eax
-      movl %eax, __GLOBAL_MEM+12
+      movl %eax, __GLOBAL_MEM+16
   check_loop:
-      movl __GLOBAL_MEM+12, %eax
+      movl __GLOBAL_MEM+16, %eax
       cmpl __GLOBAL_MEM+4, %eax
-      movl %eax, __GLOBAL_MEM+12
+      movl %eax, __GLOBAL_MEM+16
       jl body
       jmp exit_block
   body:
-      movl __GLOBAL_MEM+12, %eax
-      movl __GLOBAL_MEM+40, %esp
+      movl __GLOBAL_MEM+16, %eax
+      movl __GLOBAL_MEM+44, %esp
       subl $(4), %esp
       movl %eax, 0(%esp)
       subl $(4), %esp
@@ -117,14 +125,14 @@
       addl $(4), %esp
       incl %eax
       movl %eax, __GLOBAL_MEM
-      movl %eax, __GLOBAL_MEM+12
-      movl %esp, __GLOBAL_MEM+40
+      movl %eax, __GLOBAL_MEM+16
+      movl %esp, __GLOBAL_MEM+44
       jmp check_loop
   exit_block:
-      movl __GLOBAL_MEM+12, %eax
+      movl __GLOBAL_MEM+16, %eax
       xorl %eax, %eax
       ret
-      movl %eax, __GLOBAL_MEM+12
+      movl %eax, __GLOBAL_MEM+16
   
   '''
 # ---
@@ -139,78 +147,79 @@
       .int 10, 2, 8, 20, 5 # values (+35)
       .int 5 # count (+55)
       .zero 1 # __pad_59 (+59)
-      .int 0 # EAX (+60)
-      .int 0 # EBX (+64)
-      .int 0 # ECX (+68)
-      .int 0 # EDX (+72)
-      .int 0 # ESI (+76)
-      .int 0 # EDI (+80)
-      .int 0 # EBP (+84)
-      .int 0 # ESP (+88)
+      .int 0 # scratch (+60)
+      .int 0 # EAX (+64)
+      .int 0 # EBX (+68)
+      .int 0 # ECX (+72)
+      .int 0 # EDX (+76)
+      .int 0 # ESI (+80)
+      .int 0 # EDI (+84)
+      .int 0 # EBP (+88)
+      .int 0 # ESP (+92)
   
   .section .text
   
   .global main
   main:
-      movl __GLOBAL_MEM+84, %ebp
-      movl __GLOBAL_MEM+76, %esi
-      movl __GLOBAL_MEM+88, %esp
+      movl __GLOBAL_MEM+88, %ebp
+      movl __GLOBAL_MEM+80, %esi
+      movl __GLOBAL_MEM+92, %esp
       subl $(4), %esp
       movl %ebp, 0(%esp)
       movl %esp, %ebp
       xorl %esi, %esi
-      movl %ebp, __GLOBAL_MEM+84
-      movl %esi, __GLOBAL_MEM+76
-      movl %esp, __GLOBAL_MEM+88
+      movl %ebp, __GLOBAL_MEM+88
+      movl %esi, __GLOBAL_MEM+80
+      movl %esp, __GLOBAL_MEM+92
   process_loop:
-      movl __GLOBAL_MEM+76, %esi
+      movl __GLOBAL_MEM+80, %esi
       cmpl __GLOBAL_MEM+55, %esi
-      movl %esi, __GLOBAL_MEM+76
+      movl %esi, __GLOBAL_MEM+80
       jl loc_23
       jmp end_main
   loc_23:
-      movl __GLOBAL_MEM+60, %eax
-      movl __GLOBAL_MEM+76, %esi
+      movl __GLOBAL_MEM+64, %eax
+      movl __GLOBAL_MEM+80, %esi
       movl __GLOBAL_MEM+35(,%esi,4), %eax
       cmpl $(8), %eax
-      movl %eax, __GLOBAL_MEM+60
-      movl %esi, __GLOBAL_MEM+76
+      movl %eax, __GLOBAL_MEM+64
+      movl %esi, __GLOBAL_MEM+80
       jg is_high
       jmp is_low
   is_high:
-      movl __GLOBAL_MEM+60, %eax
-      movl __GLOBAL_MEM+88, %esp
+      movl __GLOBAL_MEM+64, %eax
+      movl __GLOBAL_MEM+92, %esp
       subl $(4), %esp
       movl %eax, 0(%esp)
       subl $(4), %esp
       movl $(__GLOBAL_MEM), 0(%esp)
       call printf
       addl $(8), %esp
-      movl %eax, __GLOBAL_MEM+60
-      movl %esp, __GLOBAL_MEM+88
+      movl %eax, __GLOBAL_MEM+64
+      movl %esp, __GLOBAL_MEM+92
   next_iter:
-      movl __GLOBAL_MEM+76, %esi
+      movl __GLOBAL_MEM+80, %esi
       incl %esi
-      movl %esi, __GLOBAL_MEM+76
+      movl %esi, __GLOBAL_MEM+80
       jmp process_loop
   is_low:
-      movl __GLOBAL_MEM+60, %eax
-      movl __GLOBAL_MEM+88, %esp
+      movl __GLOBAL_MEM+64, %eax
+      movl __GLOBAL_MEM+92, %esp
       subl $(4), %esp
       movl %eax, 0(%esp)
       subl $(4), %esp
       movl $(__GLOBAL_MEM+18), 0(%esp)
       call printf
       addl $(8), %esp
-      movl %eax, __GLOBAL_MEM+60
-      movl %esp, __GLOBAL_MEM+88
+      movl %eax, __GLOBAL_MEM+64
+      movl %esp, __GLOBAL_MEM+92
       jmp next_iter
   end_main:
-      movl __GLOBAL_MEM+60, %eax
+      movl __GLOBAL_MEM+64, %eax
       xorl %eax, %eax
       leave
       ret
-      movl %eax, __GLOBAL_MEM+60
+      movl %eax, __GLOBAL_MEM+64
   
   '''
 # ---
@@ -222,6 +231,53 @@
       .ascii "maria1" # x2 (+5)
       .ascii "maria2" # x3 (+11)
       .zero 3 # __pad_17 (+17)
+      .int 0 # scratch (+20)
+      .int 0 # EAX (+24)
+      .int 0 # EBX (+28)
+      .int 0 # ECX (+32)
+      .int 0 # EDX (+36)
+      .int 0 # ESI (+40)
+      .int 0 # EDI (+44)
+      .int 0 # EBP (+48)
+      .int 0 # ESP (+52)
+  
+  .section .text
+  
+  .global main
+  main:
+      movl __GLOBAL_MEM+24, %eax
+      movl __GLOBAL_MEM+28, %ebx
+      movl __GLOBAL_MEM+32, %ecx
+      movl __GLOBAL_MEM+36, %edx
+      movl $(4), %eax
+      movl $(1), %ebx
+      movl $(__GLOBAL_MEM), %ecx
+      movl $(14), %edx
+      int $(128)
+      movl %eax, __GLOBAL_MEM+24
+      movl %ebx, __GLOBAL_MEM+28
+      movl %ecx, __GLOBAL_MEM+32
+      movl %edx, __GLOBAL_MEM+36
+  end:
+      movl __GLOBAL_MEM+24, %eax
+      movl __GLOBAL_MEM+28, %ebx
+      movl $(1), %eax
+      xorl %ebx, %ebx
+      int $(128)
+      movl %eax, __GLOBAL_MEM+24
+      movl %ebx, __GLOBAL_MEM+28
+  
+  '''
+# ---
+# name: test_e2e_transformation_snapshot[syscall2.s][syscall2_obfuscated]
+  '''
+  .section .data
+  __GLOBAL_MEM:
+      .ascii "maria" # x1 (+0)
+      .int 1634165602 # x2 (+5)
+      .ascii "maria2" # x3 (+9)
+      .zero 1 # __pad_15 (+15)
+      .int 0 # scratch (+16)
       .int 0 # EAX (+20)
       .int 0 # EBX (+24)
       .int 0 # ECX (+28)
@@ -256,51 +312,6 @@
       int $(128)
       movl %eax, __GLOBAL_MEM+20
       movl %ebx, __GLOBAL_MEM+24
-  
-  '''
-# ---
-# name: test_e2e_transformation_snapshot[syscall2.s][syscall2_obfuscated]
-  '''
-  .section .data
-  __GLOBAL_MEM:
-      .ascii "maria" # x1 (+0)
-      .int 1634165602 # x2 (+5)
-      .ascii "maria2" # x3 (+9)
-      .zero 1 # __pad_15 (+15)
-      .int 0 # EAX (+16)
-      .int 0 # EBX (+20)
-      .int 0 # ECX (+24)
-      .int 0 # EDX (+28)
-      .int 0 # ESI (+32)
-      .int 0 # EDI (+36)
-      .int 0 # EBP (+40)
-      .int 0 # ESP (+44)
-  
-  .section .text
-  
-  .global main
-  main:
-      movl __GLOBAL_MEM+16, %eax
-      movl __GLOBAL_MEM+20, %ebx
-      movl __GLOBAL_MEM+24, %ecx
-      movl __GLOBAL_MEM+28, %edx
-      movl $(4), %eax
-      movl $(1), %ebx
-      movl $(__GLOBAL_MEM), %ecx
-      movl $(14), %edx
-      int $(128)
-      movl %eax, __GLOBAL_MEM+16
-      movl %ebx, __GLOBAL_MEM+20
-      movl %ecx, __GLOBAL_MEM+24
-      movl %edx, __GLOBAL_MEM+28
-  end:
-      movl __GLOBAL_MEM+16, %eax
-      movl __GLOBAL_MEM+20, %ebx
-      movl $(1), %eax
-      xorl %ebx, %ebx
-      int $(128)
-      movl %eax, __GLOBAL_MEM+16
-      movl %ebx, __GLOBAL_MEM+20
   
   '''
 # ---

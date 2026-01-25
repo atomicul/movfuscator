@@ -1,79 +1,75 @@
-from typing import List, Iterator, Set
+from typing import List
 from itertools import chain
 
 from textparser import (
     Function,
-    BasicBlock,
     Instruction,
     RegisterOperand,
     ImmediateOperand,
     MemoryOperand,
     Expression,
-    DirectSuccessor,
-    ConditionalSuccessor,
+    Operand,
 )
+from .utils import iter_blocks
 
 ESP = RegisterOperand.ESP
+EAX = RegisterOperand.EAX
+EBX = RegisterOperand.EBX
 
 
-def expand_stack_ops(functions: List[Function]):
+def expand_stack_ops(functions: List[Function], scratch_offset: int, data_label: str):
     """
-    Scans all basic blocks and replaces explicit push/pop instructions
-    with equivalent sequences of MOV, ADD, and SUB.
+    Scans all basic blocks and replaces explicit push/pop instructions.
+    Uses scratch_offset to safely handle Memory-to-Memory moves.
     """
-    all_blocks = chain.from_iterable(iter_blocks(f) for f in functions)
 
-    for block in all_blocks:
+    for block in iter_blocks(functions):
         block.instructions = list(
-            chain.from_iterable(expand_instruction(i) for i in block.instructions)
+            chain.from_iterable(
+                expand_instruction(i, scratch_offset, data_label)
+                for i in block.instructions
+            )
         )
 
 
-def iter_blocks(func: Function) -> Iterator[BasicBlock]:
-    """
-    Generator that traverses the CFG and yields every unique BasicBlock.
-    Eliminates the need for deep nesting or manual recursion in the main logic.
-    """
-    visited: Set[int] = set()
-    stack: List[BasicBlock] = [func.entry_block]
-
-    while stack:
-        block = stack.pop()
-        if id(block) in visited:
-            continue
-        visited.add(id(block))
-
-        yield block
-
-        if block.successor:
-            match block.successor:
-                case DirectSuccessor(next_blk):
-                    stack.append(next_blk)
-                case ConditionalSuccessor(true_blk, false_blk, _):
-                    stack.append(true_blk)
-                    stack.append(false_blk)
-
-
-def expand_instruction(instr: Instruction) -> List[Instruction]:
-    """
-    Maps a single instruction to a list of instructions (1-to-N expansion).
-    """
+def expand_instruction(
+    instr: Instruction, scratch_offset: int, data_label: str
+) -> List[Instruction]:
     match instr.mnemonic:
         case "pushl":
-            return expand_push(instr)
+            return expand_push(instr, scratch_offset, data_label)
         case "popl":
-            return expand_pop(instr)
+            return expand_pop(instr, scratch_offset, data_label)
         case _:
             return [instr]
 
 
-def expand_push(instr: Instruction) -> List[Instruction]:
-    """push %src  ->  sub $4, %esp; mov %src, (%esp)"""
+def get_safe_scratch(op: Operand) -> RegisterOperand:
+    """Returns EBX if operand uses EAX, else returns EAX."""
+    if isinstance(op, MemoryOperand):
+        used = {op.base, op.index}
+        if EAX in used:
+            return EBX
+    return EAX
+
+
+def scratch_op(
+    reg: RegisterOperand, offset: int, data_label: str, is_load: bool
+) -> Instruction:
+    """Helper to generate load/save for scratch register."""
+    mem = MemoryOperand(displacement=Expression(data_label) + offset)
+    if is_load:
+        return Instruction("movl", [mem, reg])
+    return Instruction("movl", [reg, mem])
+
+
+def expand_push(
+    instr: Instruction, scratch_offset: int, data_label: str
+) -> List[Instruction]:
+    """push %src -> sub $4, %esp; mov %src, (%esp)"""
     src = instr.operands[0]
 
-    # Special Case: push %esp
-    # Pushes the *old* value of ESP (value before decrement).
-    # Implementation: movl %esp, -4(%esp) -> subl $4, %esp
+    # Special Case: push %esp (pushes value BEFORE decrement)
     if isinstance(src, RegisterOperand) and src == ESP:
         return [
             Instruction(
@@ -82,25 +78,47 @@ def expand_push(instr: Instruction) -> List[Instruction]:
             Instruction("subl", [ImmediateOperand(Expression(4)), ESP]),
         ]
 
+    # Standard Case: Register or Immediate
+    if not isinstance(src, MemoryOperand):
+        return [
+            Instruction("subl", [ImmediateOperand(Expression(4)), ESP]),
+            Instruction("movl", [src, MemoryOperand(base=ESP)]),
+        ]
+
+    # Edge Case: Memory Operand (Requires Scratch)
+    tmp = get_safe_scratch(src)
     return [
+        scratch_op(tmp, scratch_offset, data_label, is_load=False),
+        Instruction("movl", [src, tmp]),
         Instruction("subl", [ImmediateOperand(Expression(4)), ESP]),
-        Instruction("movl", [src, MemoryOperand(base=ESP)]),
+        Instruction("movl", [tmp, MemoryOperand(base=ESP)]),
+        scratch_op(tmp, scratch_offset, data_label, is_load=True),
     ]
 
 
-def expand_pop(instr: Instruction) -> List[Instruction]:
-    """pop %dst   ->  mov (%esp), %dst; add $4, %esp"""
+def expand_pop(
+    instr: Instruction, scratch_offset: int, data_label: str
+) -> List[Instruction]:
+    """pop %dst -> mov (%esp), %dst; add $4, %esp"""
     dst = instr.operands[0]
 
     # Special Case: pop %esp
-    # Loads the stack pointer *from* the stack.
-    # The standard increment (ESP + 4) is skipped/overwritten by the load.
     if isinstance(dst, RegisterOperand) and dst == ESP:
+        return [Instruction("movl", [MemoryOperand(base=ESP), ESP])]
+
+    # Standard Case: Register
+    if not isinstance(dst, MemoryOperand):
         return [
-            Instruction("movl", [MemoryOperand(base=ESP), ESP]),
+            Instruction("movl", [MemoryOperand(base=ESP), dst]),
+            Instruction("addl", [ImmediateOperand(Expression(4)), ESP]),
         ]
 
+    # Edge Case: Memory Operand (Requires Scratch)
+    tmp = get_safe_scratch(dst)
     return [
-        Instruction("movl", [MemoryOperand(base=ESP), dst]),
+        scratch_op(tmp, scratch_offset, data_label, is_load=False),
+        Instruction("movl", [MemoryOperand(base=ESP), tmp]),
         Instruction("addl", [ImmediateOperand(Expression(4)), ESP]),
+        Instruction("movl", [tmp, dst]),
+        scratch_op(tmp, scratch_offset, data_label, is_load=True),
     ]
