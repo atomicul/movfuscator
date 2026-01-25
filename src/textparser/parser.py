@@ -326,7 +326,7 @@ def link_blocks(blocks: List[BasicBlock]) -> None:
         terminates = is_terminator(mnem)
         is_conditional = terminates and not is_unconditional(mnem)
 
-        if not terminates:
+        if not terminates or mnem == "call":
             if next_physical:
                 block.successor = DirectSuccessor(next_physical)
             continue
@@ -396,7 +396,11 @@ def create_conditional_successor(
 
 def is_terminator(mnemonic: str) -> bool:
     m = mnemonic.lower()
-    return m.startswith("j") or m.startswith("b") or m in ["ret", "iret", "syscall"]
+    return (
+        m.startswith("j")
+        or m.startswith("b")
+        or m in ["ret", "iret", "syscall", "call"]
+    )
 
 
 def is_unconditional(mnemonic: str) -> bool:
