@@ -50,6 +50,38 @@ class RegisterOperand(Enum):
 
         return 2
 
+    def get_32bit_counterpart(self) -> "RegisterOperand":
+        """
+        Returns the 32-bit container for this register.
+        Example: %ah -> %eax, %cx -> %ecx, %esi -> %esi
+        """
+        name = self.name
+
+        if name.startswith("E"):
+            return self
+
+        if "AX" in name or name in ("AL", "AH"):
+            return RegisterOperand.EAX
+        if "BX" in name or name in ("BL", "BH"):
+            return RegisterOperand.EBX
+        if "CX" in name or name in ("CL", "CH"):
+            return RegisterOperand.ECX
+        if "DX" in name or name in ("DL", "DH"):
+            return RegisterOperand.EDX
+
+        if "SI" in name:
+            return RegisterOperand.ESI
+        if "DI" in name:
+            return RegisterOperand.EDI
+        if "BP" in name:
+            return RegisterOperand.EBP
+        if "SP" in name:
+            return RegisterOperand.ESP
+
+        raise ValueError(
+            f"Failed to map register {self.value} to a 32-bit counterpart."
+        )
+
     def __str__(self) -> str:
         return self.value
 
