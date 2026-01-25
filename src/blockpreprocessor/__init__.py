@@ -12,7 +12,7 @@ from textparser import (
     ConditionalSuccessor,
     JumpCondition,
 )
-from .resolver import parse_cfg
+from .preprocessor import preprocess_cfg
 
 __all__ = [
     "Allocator",
@@ -25,7 +25,7 @@ __all__ = [
     "RegisterOperand",
     "BasicBlock",
     "Expression",
-    "parse_cfg",
+    "preprocess_cfg",
     "DirectSuccessor",
     "ConditionalSuccessor",
     "JumpCondition",
