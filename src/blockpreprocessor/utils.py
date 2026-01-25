@@ -1,7 +1,6 @@
-from typing import List, Set, Iterable
+from typing import Protocol, Sequence, Set, Iterable
 from itertools import chain
 from textparser import (
-    Function,
     Instruction,
     BasicBlock,
     DirectSuccessor,
@@ -9,7 +8,7 @@ from textparser import (
 )
 
 
-def iter_blocks(functions: List[Function]) -> Iterable[BasicBlock]:
+def iter_blocks(functions: Sequence["Function"]) -> Iterable[BasicBlock]:
     """
     Traverses the Control Flow Graph (CFG) of the provided functions
     and yields every unique BasicBlock exactly once.
@@ -35,9 +34,14 @@ def iter_blocks(functions: List[Function]) -> Iterable[BasicBlock]:
                     stack.append(block.successor.false_block)
 
 
-def iter_all_instructions(functions: List[Function]) -> Iterable[Instruction]:
+def iter_all_instructions(functions: Sequence["Function"]) -> Iterable[Instruction]:
     """
     Helper to iterate over every single instruction across all provided functions.
     It abstracts away the hierarchy of Function -> BasicBlock -> Instruction.
     """
     return chain.from_iterable(block.instructions for block in iter_blocks(functions))
+
+
+class Function(Protocol):
+    @property
+    def entry_block(self) -> BasicBlock: ...

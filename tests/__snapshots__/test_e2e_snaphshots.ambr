@@ -20,6 +20,15 @@
   
   .global abs_val
   abs_val:
+      movl %eax, __GLOBAL_MEM+36
+      movl %ebx, __GLOBAL_MEM+40
+      movl %ecx, __GLOBAL_MEM+44
+      movl %edx, __GLOBAL_MEM+48
+      movl %esi, __GLOBAL_MEM+52
+      movl %edi, __GLOBAL_MEM+56
+      movl %ebp, __GLOBAL_MEM+60
+      movl %esp, __GLOBAL_MEM+64
+  abs_val__entry_block:
       movl __GLOBAL_MEM+36, %eax
       movl __GLOBAL_MEM+60, %ebp
       movl __GLOBAL_MEM+64, %esp
@@ -48,6 +57,15 @@
   
   .global main
   main:
+      movl %eax, __GLOBAL_MEM+36
+      movl %ebx, __GLOBAL_MEM+40
+      movl %ecx, __GLOBAL_MEM+44
+      movl %edx, __GLOBAL_MEM+48
+      movl %esi, __GLOBAL_MEM+52
+      movl %edi, __GLOBAL_MEM+56
+      movl %ebp, __GLOBAL_MEM+60
+      movl %esp, __GLOBAL_MEM+64
+  main__entry_block:
       movl __GLOBAL_MEM+36, %eax
       movl __GLOBAL_MEM+60, %ebp
       movl __GLOBAL_MEM+64, %esp
@@ -103,6 +121,15 @@
   
   .global main
   main:
+      movl %eax, __GLOBAL_MEM+16
+      movl %ebx, __GLOBAL_MEM+20
+      movl %ecx, __GLOBAL_MEM+24
+      movl %edx, __GLOBAL_MEM+28
+      movl %esi, __GLOBAL_MEM+32
+      movl %edi, __GLOBAL_MEM+36
+      movl %ebp, __GLOBAL_MEM+40
+      movl %esp, __GLOBAL_MEM+44
+  main__entry_block:
       movl __GLOBAL_MEM+16, %eax
       movl __GLOBAL_MEM, %eax
       movl %eax, __GLOBAL_MEM+16
@@ -161,6 +188,15 @@
   
   .global main
   main:
+      movl %eax, __GLOBAL_MEM+64
+      movl %ebx, __GLOBAL_MEM+68
+      movl %ecx, __GLOBAL_MEM+72
+      movl %edx, __GLOBAL_MEM+76
+      movl %esi, __GLOBAL_MEM+80
+      movl %edi, __GLOBAL_MEM+84
+      movl %ebp, __GLOBAL_MEM+88
+      movl %esp, __GLOBAL_MEM+92
+  main__entry_block:
       movl __GLOBAL_MEM+88, %ebp
       movl __GLOBAL_MEM+80, %esi
       movl __GLOBAL_MEM+92, %esp
@@ -245,6 +281,15 @@
   
   .global main
   main:
+      movl %eax, __GLOBAL_MEM+24
+      movl %ebx, __GLOBAL_MEM+28
+      movl %ecx, __GLOBAL_MEM+32
+      movl %edx, __GLOBAL_MEM+36
+      movl %esi, __GLOBAL_MEM+40
+      movl %edi, __GLOBAL_MEM+44
+      movl %ebp, __GLOBAL_MEM+48
+      movl %esp, __GLOBAL_MEM+52
+  main__entry_block:
       movl __GLOBAL_MEM+24, %eax
       movl __GLOBAL_MEM+28, %ebx
       movl __GLOBAL_MEM+32, %ecx
@@ -291,6 +336,15 @@
   
   .global main
   main:
+      movl %eax, __GLOBAL_MEM+20
+      movl %ebx, __GLOBAL_MEM+24
+      movl %ecx, __GLOBAL_MEM+28
+      movl %edx, __GLOBAL_MEM+32
+      movl %esi, __GLOBAL_MEM+36
+      movl %edi, __GLOBAL_MEM+40
+      movl %ebp, __GLOBAL_MEM+44
+      movl %esp, __GLOBAL_MEM+48
+  main__entry_block:
       movl __GLOBAL_MEM+20, %eax
       movl __GLOBAL_MEM+24, %ebx
       movl __GLOBAL_MEM+28, %ecx

@@ -1,6 +1,5 @@
 from dataparser import Allocator, Allocation
 from textparser import (
-    Function,
     Instruction,
     Operand,
     ImmediateOperand,
@@ -13,6 +12,7 @@ from textparser import (
     JumpCondition,
 )
 from .preprocessor import preprocess_cfg
+from .models import Function
 
 __all__ = [
     "Allocator",

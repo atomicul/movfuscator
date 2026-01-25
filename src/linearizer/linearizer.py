@@ -32,7 +32,9 @@ def linearize_function(cfg_func: CfgFunction) -> Function:
     """
     blocks = list(discover_blocks(cfg_func.entry_block))
 
-    linear_stream = [
+    linear_stream = [Label(cfg_func.name)] + cfg_func.prologue
+
+    linear_stream += [
         instr
         for i, block in enumerate(blocks)
         for instr in generate_block_content(

@@ -1,9 +1,10 @@
 from typing import List
 from dataparser import Allocator, parse_data
-from textparser import parse_cfg as parse_text_cfg, Function
+from textparser import parse_cfg as parse_text_cfg
 from .symbols import resolve_symbols
 from .expansion import expand_stack_ops
 from .context import inject_context_switching
+from .models import Function
 
 
 def preprocess_cfg(asm: str, allocator: Allocator, data_label: str) -> List[Function]:
@@ -29,6 +30,4 @@ def preprocess_cfg(asm: str, allocator: Allocator, data_label: str) -> List[Func
     scratch = allocator.allocate_data(0, "scratch").offset
     expand_stack_ops(functions, scratch, data_label)
 
-    inject_context_switching(functions, allocator, data_label)
-
-    return functions
+    return inject_context_switching(functions, allocator, data_label)

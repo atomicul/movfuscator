@@ -1,14 +1,16 @@
 from typing import List, Set, Dict
+from itertools import chain
 
 from dataparser import Allocator
 from textparser import (
-    Function,
+    Function as TextFunction,
     Instruction,
     RegisterOperand,
     MemoryOperand,
     Expression,
     BasicBlock,
 )
+from .models import Function
 from .utils import iter_blocks
 
 TRACKED_REGISTERS = [
@@ -24,15 +26,34 @@ TRACKED_REGISTERS = [
 
 
 def inject_context_switching(
-    functions: List[Function], allocator: Allocator, data_label: str
-):
+    functions: List[TextFunction], allocator: Allocator, data_label: str
+) -> List[Function]:
     """
     Virtualizes registers by enforcing a Load-Execute-Save lifecycle for every block.
+
+    Returns a list of preprocessed Functions, each containing a prologue that
+    commits the initial hardware register state to the global memory context.
     """
     reg_offsets = allocate_virtual_registers(allocator)
+    out = [
+        Function(
+            name=f.name,
+            entry_block=f.entry_block,
+            prologue=[
+                create_save(reg, reg_offsets[reg], data_label)
+                for reg in TRACKED_REGISTERS
+            ],
+        )
+        for f in functions
+    ]
 
-    for block in iter_blocks(functions):
+    for block in iter_blocks(out):
         instrument_block(block, reg_offsets, data_label)
+
+    for func in out:
+        func.entry_block.name = f"{func.name}__entry_block"
+
+    return out
 
 
 def allocate_virtual_registers(allocator: Allocator) -> Dict[RegisterOperand, int]:
@@ -99,27 +120,18 @@ def get_used_registers(instructions: List[Instruction]) -> Set[RegisterOperand]:
 def get_implicit_registers(instr: Instruction) -> Set[RegisterOperand]:
     """
     Returns the set of registers implicitly used or modified by a specific instruction.
-    Examples:
-      - mul/div implicitly use EAX and EDX.
-      - cdq/cwd implicitly use EAX and EDX.
-      - imul (1-operand form) implicitly uses EAX and EDX.
     """
     implicit = set()
     mnem = instr.mnemonic.lower()
 
     # Instructions that always use EAX + EDX (e.g. mul, div, cdq)
-    # We check startswith to handle suffixes like mull, mulw, etc.
-    # Note: 'imul' is handled separately because of its multi-operand forms.
     implicit_map = {
         "mul": [RegisterOperand.EAX, RegisterOperand.EDX],
         "div": [RegisterOperand.EAX, RegisterOperand.EDX],
         "idiv": [RegisterOperand.EAX, RegisterOperand.EDX],
         "cdq": [RegisterOperand.EAX, RegisterOperand.EDX],
-        "cwd": [
-            RegisterOperand.EAX,
-            RegisterOperand.EDX,
-        ],  # cwd: ax->dx:ax (mapped to 32-bit parent)
-        "cbw": [RegisterOperand.EAX],  # cbw: al->ax (mapped to EAX)
+        "cwd": [RegisterOperand.EAX, RegisterOperand.EDX],
+        "cbw": [RegisterOperand.EAX],
         "cwde": [RegisterOperand.EAX],
     }
 
@@ -130,7 +142,6 @@ def get_implicit_registers(instr: Instruction) -> Set[RegisterOperand]:
             return implicit
 
     # Special Case: imul
-    # imul can take 1, 2, or 3 operands. Only the 1-operand form implicitly uses EDX:EAX.
     if mnem.startswith("imul"):
         if len(instr.operands) == 1:
             implicit.add(RegisterOperand.EAX)
