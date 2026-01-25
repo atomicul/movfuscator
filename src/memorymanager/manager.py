@@ -17,11 +17,14 @@ class MemoryManager:
         """Returns the list of recorded allocations."""
         return self._allocations
 
-    def allocate_data(self, value: "InputData", name: str = "") -> Allocation:
+    def allocate_data(
+        self, value: "InputData", name: str = "", enforce_alignment: bool = True
+    ) -> Allocation:
         """
         Allocates memory initialized with specific data.
         """
-        self._ensure_alignment()
+        if enforce_alignment:
+            self._ensure_alignment()
 
         new_alloc = Allocation.with_data(name, self._current_offset, value)
 
@@ -30,14 +33,17 @@ class MemoryManager:
 
         return new_alloc
 
-    def allocate_empty(self, size: int, name: str) -> Allocation:
+    def allocate_empty(
+        self, size: int, name: str, enforce_alignment: bool = True
+    ) -> Allocation:
         """
         Reserves a block of zero-initialized memory.
         """
         if size <= 0:
             raise ValueError("Size must be positive.")
 
-        self._ensure_alignment()
+        if enforce_alignment:
+            self._ensure_alignment()
 
         new_alloc = Allocation.empty(name, self._current_offset, size)
 
@@ -58,4 +64,4 @@ class MemoryManager:
             self._current_offset += padding_needed
 
 
-InputData = Union[int, float, str, List[Union[int, float]]]
+InputData = Union[int, float, str, bytes, List[Union[int, float]]]
