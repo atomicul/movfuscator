@@ -78,6 +78,12 @@
       movl %eax, 0(%esp)
       movl __GLOBAL_MEM+32, %eax
       call abs_val
+      movl %eax, __GLOBAL_MEM+36
+      movl %ebp, __GLOBAL_MEM+60
+      movl %esp, __GLOBAL_MEM+64
+  loc_43:
+      movl __GLOBAL_MEM+36, %eax
+      movl __GLOBAL_MEM+64, %esp
       addl $(4), %esp
       subl $(4), %esp
       movl %eax, 0(%esp)
@@ -89,12 +95,16 @@
       subl $(4), %esp
       movl $(__GLOBAL_MEM), 0(%esp)
       call printf
+      movl %eax, __GLOBAL_MEM+36
+      movl %esp, __GLOBAL_MEM+64
+  loc_51:
+      movl __GLOBAL_MEM+36, %eax
+      movl __GLOBAL_MEM+64, %esp
       addl $(12), %esp
       xorl %eax, %eax
       leave
       ret
       movl %eax, __GLOBAL_MEM+36
-      movl %ebp, __GLOBAL_MEM+60
       movl %esp, __GLOBAL_MEM+64
   
   '''
@@ -147,6 +157,11 @@
       subl $(4), %esp
       movl $(__GLOBAL_MEM+8), 0(%esp)
       call printf
+      movl %eax, __GLOBAL_MEM+16
+      movl %esp, __GLOBAL_MEM+44
+  loc_23:
+      movl __GLOBAL_MEM+16, %eax
+      movl __GLOBAL_MEM+44, %esp
       addl $(4), %esp
       movl 0(%esp), %eax
       addl $(4), %esp
@@ -230,8 +245,11 @@
       subl $(4), %esp
       movl $(__GLOBAL_MEM), 0(%esp)
       call printf
-      addl $(8), %esp
       movl %eax, __GLOBAL_MEM+64
+      movl %esp, __GLOBAL_MEM+92
+  loc_42:
+      movl __GLOBAL_MEM+92, %esp
+      addl $(8), %esp
       movl %esp, __GLOBAL_MEM+92
   next_iter:
       movl __GLOBAL_MEM+80, %esi
@@ -246,8 +264,11 @@
       subl $(4), %esp
       movl $(__GLOBAL_MEM+18), 0(%esp)
       call printf
-      addl $(8), %esp
       movl %eax, __GLOBAL_MEM+64
+      movl %esp, __GLOBAL_MEM+92
+  loc_34:
+      movl __GLOBAL_MEM+92, %esp
+      addl $(8), %esp
       movl %esp, __GLOBAL_MEM+92
       jmp next_iter
   end_main:

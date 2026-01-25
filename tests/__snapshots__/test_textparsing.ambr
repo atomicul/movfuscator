@@ -69,8 +69,10 @@
   digraph asm_flow {
       node [shape=box fontname="Courier"];
       // Edge definitions: Green=Condition Met (e.g. je), Red=Condition Not Met (e.g. jne)
-      "main" [label="main\n----------------\nmovl $(10), %eax\lcall helper_func\lxorl %ecx, %ecx\l"];
-      "main" -> "lp" [color="black"];
+      "main" [label="main\n----------------\nmovl $(10), %eax\lcall helper_func\l"];
+      "main" -> "loc_9" [color="black"];
+      "loc_9" [label="loc_9\n----------------\nxorl %ecx, %ecx\l"];
+      "loc_9" -> "lp" [color="black"];
       "lp" [label="lp\n----------------\npushl %ecx\lincl %ecx\lcmpl %eax, %ecx\l"];
       "lp" -> "lp" [color="green" label="jb" fontcolor="green"];
       "lp" -> "loc_16" [color="red" label="jae" fontcolor="red"];
