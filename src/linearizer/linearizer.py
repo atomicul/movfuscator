@@ -1,7 +1,7 @@
 from typing import Iterable, List, Set, Optional, Iterator, Union, assert_never
 
-from symbolsresolver import (
-    parse_cfg,
+from blockpreprocessor import (
+    preprocess_cfg,
     Allocator,
     Function as CfgFunction,
     BasicBlock,
@@ -21,7 +21,7 @@ def get_linearized_asm(
     Parses the assembly into a CFG (resolving symbols), then flattens it
     back into a linear list of instructions and labels.
     """
-    cfg_functions = parse_cfg(asm, allocator, data_label)
+    cfg_functions = preprocess_cfg(asm, allocator, data_label)
 
     return [linearize_function(func) for func in cfg_functions]
 
@@ -32,7 +32,9 @@ def linearize_function(cfg_func: CfgFunction) -> Function:
     """
     blocks = list(discover_blocks(cfg_func.entry_block))
 
-    linear_stream = [
+    linear_stream = [Label(cfg_func.name)] + cfg_func.prologue
+
+    linear_stream += [
         instr
         for i, block in enumerate(blocks)
         for instr in generate_block_content(

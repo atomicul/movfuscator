@@ -1,6 +1,5 @@
 from dataparser import Allocator, Allocation
 from textparser import (
-    Function,
     Instruction,
     Operand,
     ImmediateOperand,
@@ -12,7 +11,8 @@ from textparser import (
     ConditionalSuccessor,
     JumpCondition,
 )
-from .resolver import parse_cfg
+from .preprocessor import preprocess_cfg
+from .models import Function
 
 __all__ = [
     "Allocator",
@@ -25,7 +25,7 @@ __all__ = [
     "RegisterOperand",
     "BasicBlock",
     "Expression",
-    "parse_cfg",
+    "preprocess_cfg",
     "DirectSuccessor",
     "ConditionalSuccessor",
     "JumpCondition",
