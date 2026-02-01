@@ -17,6 +17,7 @@ test = [
 [tool.pyright]
 venvPath = "."
 venv = ".venv"
+pythonVersion = "3.14"
 
 [tool.pytest.ini_options]
 pythonpath = "src"
