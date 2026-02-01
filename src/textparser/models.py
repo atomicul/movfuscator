@@ -193,7 +193,21 @@ class Instruction:
     line_number: int = 0
 
     def __str__(self):
-        ops = ", ".join(str(x) for x in self.operands)
+        mnem = self.mnemonic.lower()
+        ops_strs = []
+        for op in self.operands:
+            op_str = str(op)
+            # In AT&T syntax, indirect calls/jumps need a '*' prefix when
+            # the operand dereferences memory (has base or index register).
+            # Direct calls to labels (bare displacement) don't need it.
+            if (
+                mnem in ("call", "jmp")
+                and isinstance(op, MemoryOperand)
+                and (op.base is not None or op.index is not None)
+            ):
+                op_str = "*" + op_str
+            ops_strs.append(op_str)
+        ops = ", ".join(ops_strs)
         return f"{self.mnemonic} {ops}" if ops else self.mnemonic
 
 
