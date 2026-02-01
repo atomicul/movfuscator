@@ -112,7 +112,14 @@ class Allocation:
             case int(v) | float(v):
                 return str(v)
             case str(v):
-                return f'"{v}"'
+                # Use repr to escape special chars like \n, then convert to double-quoted
+                s = repr(v)
+                if s.startswith("'") and s.endswith("'"):
+                    inner = s[1:-1]
+                    # Convert escaped single quotes back, escape double quotes
+                    inner = inner.replace("\\'", "'").replace('"', '\\"')
+                    return f'"{inner}"'
+                return s
             case bytes(v):
                 # repr(b'foo') -> "b'foo'". We strip the b and the outer quotes, then wrap in double quotes.
                 # This safely handles escapes like \n or \x00.

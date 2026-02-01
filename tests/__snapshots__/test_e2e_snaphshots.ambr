@@ -3,8 +3,7 @@
   '''
   .section .data
   __GLOBAL_MEM:
-      .asciz "Absolute value of %d is %d
-  " # fmt (+0)
+      .asciz "Absolute value of %d is %d\n" # fmt (+0)
       .int -42 # val (+28)
       .int 0 # scratch (+32)
       .int 0 # EAX (+36)
@@ -280,8 +279,7 @@
   __GLOBAL_MEM:
       .int 0 # counter (+0)
       .int 5 # limit (+4)
-      .asciz "%d
-  " # fmtstr (+8)
+      .asciz "%d\n" # fmtstr (+8)
       .int 0 # scratch (+12)
       .int 0 # EAX (+16)
       .int 0 # EBX (+20)
@@ -459,10 +457,8 @@
   '''
   .section .data
   __GLOBAL_MEM:
-      .asciz "Value %d is High
-  " # msg_high (+0)
-      .asciz "Value %d is Low
-  " # msg_low (+18)
+      .asciz "Value %d is High\n" # msg_high (+0)
+      .asciz "Value %d is Low\n" # msg_low (+18)
       .int 10, 2, 8, 20, 5 # values (+35)
       .int 5 # count (+55)
       .zero 1 # __pad_59 (+59)
