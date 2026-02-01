@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import List, Union
 
 from dataparser import parse_data
+from memorymanager import Symbol
 
 # --- Stubs and Mocks ---
 
@@ -33,7 +34,7 @@ class StubMemoryManager:
 
     def allocate_data(
         self,
-        value: Union[int, float, str, bytes, List[Union[int, float]]],
+        value: Union[int, float, str, bytes, Symbol, List[Union[int, float, Symbol]]],
         name: str,
         enforce_alignment: bool = True,
     ) -> DummyAllocation:

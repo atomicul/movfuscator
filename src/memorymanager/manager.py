@@ -1,5 +1,5 @@
 from typing import List, Union
-from .allocation import Allocation
+from .allocation import Allocation, Symbol
 
 
 class MemoryManager:
@@ -64,4 +64,4 @@ class MemoryManager:
             self._current_offset += padding_needed
 
 
-InputData = Union[int, float, str, bytes, List[Union[int, float]]]
+InputData = Union[int, float, str, bytes, Symbol, List[Union[int, float, Symbol]]]

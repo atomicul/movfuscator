@@ -1,5 +1,5 @@
 import pytest
-from memorymanager import MemoryManager
+from memorymanager import MemoryManager, Symbol
 
 
 def test_allocate_basic_types():
@@ -29,6 +29,13 @@ def test_allocate_basic_types():
     assert alloc_bytes.size == 2
     assert alloc_bytes.directive == ".ascii"
 
+    # 5. Symbol (reference to a label, 4 bytes)
+    alloc_symbol = mm.allocate_data(Symbol("my_label"), "var_symbol")
+    assert alloc_symbol.offset == 20  # 16 + 2 = 18, aligned to 20
+    assert alloc_symbol.size == 4
+    assert alloc_symbol.directive == ".int"
+    assert "my_label" in str(alloc_symbol)
+
 
 def test_allocate_lists():
     """Verifies allocation for homogeneous lists."""
@@ -39,6 +46,25 @@ def test_allocate_lists():
 
     assert alloc_list.offset == 0
     assert alloc_list.size == 12
+
+
+def test_allocate_lists_with_symbol_references():
+    """Verifies allocation for lists containing symbol references."""
+    mm = MemoryManager()
+
+    # List with symbol references: 3 items * 4 bytes = 12 bytes
+    # Symbol instances represent symbol references resolved at link time
+    alloc_list = mm.allocate_data([1, Symbol("my_label"), 3], "var_list_with_refs")
+
+    assert alloc_list.offset == 0
+    assert alloc_list.size == 12
+
+    # Verify directive is .int (not .float) when symbols are present
+    assert alloc_list.directive == ".int"
+
+    # Verify assembly output includes symbol reference as-is
+    asm_output = str(alloc_list)
+    assert "1, my_label, 3" in asm_output
 
 
 def test_allocate_empty():
@@ -112,6 +138,12 @@ def test_data_section_snapshot(snapshot):
 
     # 6. Raw Bytes
     mm.allocate_data(b"\x00\x01\x02", "raw_data")
+
+    # 7. Symbol reference
+    mm.allocate_data(Symbol("jump_target"), "ptr")
+
+    # 8. Symbol array
+    mm.allocate_data([Symbol("jump_target1"), Symbol("jump_target2")], "ptr")
 
     generated_asm = "\n".join(str(alloc) for alloc in mm.allocations)
 

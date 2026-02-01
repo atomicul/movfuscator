@@ -1,4 +1,5 @@
 from typing import Protocol, Union, List
+from memorymanager import Symbol
 
 
 class Allocation(Protocol):
@@ -9,7 +10,7 @@ class Allocation(Protocol):
 class Allocator(Protocol):
     def allocate_data(
         self,
-        value: Union[int, float, str, bytes, List[Union[int, float]]],
+        value: Union[int, float, str, bytes, Symbol, List[Union[int, float, Symbol]]],
         name: str,
         enforce_alignment: bool = True,
     ) -> Allocation: ...

@@ -1,4 +1,4 @@
-from dataparser import Allocator, Allocation
+from dataparser import Allocator, Allocation, Symbol
 from textparser import (
     Instruction,
     Operand,
@@ -17,6 +17,7 @@ from .models import Function
 __all__ = [
     "Allocator",
     "Allocation",
+    "Symbol",
     "Function",
     "Instruction",
     "Operand",

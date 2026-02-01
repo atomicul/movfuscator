@@ -2,6 +2,15 @@ from dataclasses import dataclass
 from typing import List, Union, assert_never
 
 
+class Symbol(str):
+    """
+    Represents a symbolic reference (e.g., a label) rather than a string literal.
+    Used to distinguish between `.asciz "hello"` and `.int my_label`.
+    """
+
+    pass
+
+
 class Allocation:
     """
     Represents a block of allocated memory.
@@ -18,7 +27,9 @@ class Allocation:
         cls,
         name: str,
         offset: int,
-        value: Union[int, float, str, bytes, List[Union[int, float]]],
+        value: Union[
+            int, float, str, bytes, "Symbol", List[Union[int, float, "Symbol"]]
+        ],
     ) -> "Allocation":
         """Factory method to create a data-initialized allocation."""
         if isinstance(value, list) and not value:
@@ -48,6 +59,8 @@ class Allocation:
         match self._value:
             case EmptyValue(size=s):
                 return s
+            case Symbol():
+                return 4
             case int() | float():
                 return 4
             case str(v):
@@ -65,6 +78,8 @@ class Allocation:
         match self._value:
             case EmptyValue():
                 return ".zero"
+            case Symbol():
+                return ".int"
             case int():
                 return ".int"
             case float():
@@ -92,6 +107,8 @@ class Allocation:
         match self._value:
             case EmptyValue(size=s):
                 return str(s)
+            case Symbol(v):
+                return v
             case int(v) | float(v):
                 return str(v)
             case str(v):
@@ -114,7 +131,9 @@ class Allocation:
         return f"Allocation(name='{self._name}', offset={self._offset}, value={self._value})"
 
 
-InternalValueType = Union[int, float, str, bytes, List[Union[int, float]], "EmptyValue"]
+InternalValueType = Union[
+    int, float, str, bytes, Symbol, List[Union[int, float, Symbol]], "EmptyValue"
+]
 
 
 @dataclass

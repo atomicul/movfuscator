@@ -1,6 +1,7 @@
 import re
 import ast
-from typing import Iterable, List, Union, Dict
+from typing import Iterable, List, Dict
+from memorymanager import Symbol
 from .models import Allocation, Allocator
 
 
@@ -59,9 +60,8 @@ def parse_directive(
     """Parses specific directives and calls the allocator."""
 
     if directive in [".int", ".long"]:
-        # TYPE FIX: Explicitly annotate as List[Union[int, float]]
         # Use int(x, 0) to auto-detect base (e.g. 0x123 vs 123)
-        int_values: List[Union[int, float]] = [
+        int_values: List[int | float | Symbol] = [
             int(x.strip(), 0) for x in args_str.split(",") if x.strip()
         ]
 
@@ -78,8 +78,7 @@ def parse_directive(
         )
 
     elif directive == ".float":
-        # TYPE FIX: Same annotation here for floats
-        float_values: List[Union[int, float]] = [
+        float_values: List[int | float | Symbol] = [
             float(x.strip()) for x in args_str.split(",") if x.strip()
         ]
 
