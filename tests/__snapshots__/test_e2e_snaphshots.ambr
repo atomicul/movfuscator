@@ -3,41 +3,283 @@
   '''
   .section .data
   __GLOBAL_MEM:
-      .asciz "Absolute value of %d is %d
-  " # fmt (+0)
+      .asciz "Absolute value of %d is %d\n" # fmt (+0)
       .int -42 # val (+28)
+      .int 0 # scratch (+32)
+      .int 0 # EAX (+36)
+      .int 0 # EBX (+40)
+      .int 0 # ECX (+44)
+      .int 0 # EDX (+48)
+      .int 0 # ESI (+52)
+      .int 0 # EDI (+56)
+      .int 0 # EBP (+60)
+      .int 0 # ESP (+64)
+      .int 0 # dispatch_var (+68)
+      .int 0 # scratch (+72)
+      .int 72, 68 # dispatch_targets (+76)
+      .int 0 # temp_enabled (+84)
+      .int 0 # temp_write_reg (+88)
+      .int 1, 0, 0 # block_0_enabled (+92)
+      .int 0, 1, 0 # block_1_enabled (+104)
+      .int 0, 0, 1 # block_2_enabled (+116)
+      .int 72, 64 # write_target_64 (+128)
+      .int 72, 36 # write_target_36 (+136)
+      .int 72, 60 # write_target_60 (+144)
+      .int 2, 1 # cond_dispatch_0 (+152)
+      .int 0 # dispatch_var (+160)
+      .int 0 # scratch (+164)
+      .int 164, 160 # dispatch_targets (+168)
+      .int 0 # temp_enabled (+176)
+      .int 0 # temp_write_reg (+180)
+      .int 1, 0, 0 # block_0_enabled (+184)
+      .int 0, 1, 0 # block_1_enabled (+196)
+      .int 0, 0, 1 # block_2_enabled (+208)
+      .int 164, 32 # write_target_32 (+220)
+      .int 164, 64 # write_target_64 (+228)
+      .int 164, 36 # write_target_36 (+236)
+      .int 164, 60 # write_target_60 (+244)
+      .int __noop_stub, abs_val # call_0_0_targets (+252)
+      .int __noop_stub, printf # call_1_0_targets (+260)
   
   .section .text
   
+  __noop_stub:
+      ret
+  
   .global abs_val
   abs_val:
-      pushl %ebp
+      movl %eax, __GLOBAL_MEM+36
+      movl %ebx, __GLOBAL_MEM+40
+      movl %ecx, __GLOBAL_MEM+44
+      movl %edx, __GLOBAL_MEM+48
+      movl %esi, __GLOBAL_MEM+52
+      movl %edi, __GLOBAL_MEM+56
+      movl %ebp, __GLOBAL_MEM+60
+      movl %esp, __GLOBAL_MEM+64
+      movl $(0), __GLOBAL_MEM+68
+  abs_val__loop:
+      cmpl $(-1), __GLOBAL_MEM+68
+      je abs_val__exit
+  abs_val__entry_block:
+      movl __GLOBAL_MEM+68, %edi
+      movl __GLOBAL_MEM+92(,%edi,4), %edi
+      movl %edi, __GLOBAL_MEM+84
+      movl __GLOBAL_MEM+36, %eax
+      movl __GLOBAL_MEM+60, %ebp
+      movl __GLOBAL_MEM+64, %esp
+      subl $(4), %esp
+      movl %ebp, 0(%esp)
       movl %esp, %ebp
       movl 8(%ebp), %eax
       cmpl $(0), %eax
-      jge end_abs
-      jmp loc_27
-  end_abs:
-      popl %ebp
-      ret
+      movl %edi, __GLOBAL_MEM+88
+      movl __GLOBAL_MEM+84, %edi
+      movl __GLOBAL_MEM+136(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %eax, 0(%edi)
+      movl __GLOBAL_MEM+88, %edi
+      movl %edi, __GLOBAL_MEM+88
+      movl __GLOBAL_MEM+84, %edi
+      movl __GLOBAL_MEM+144(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %ebp, 0(%edi)
+      movl __GLOBAL_MEM+88, %edi
+      movl %edi, __GLOBAL_MEM+88
+      movl __GLOBAL_MEM+84, %edi
+      movl __GLOBAL_MEM+128(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %esp, 0(%edi)
+      movl __GLOBAL_MEM+88, %edi
+      movl __GLOBAL_MEM+84, %edi
+      movl __GLOBAL_MEM+76(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      setl %cl
+      movzbl %cl, %ecx
+      movl __GLOBAL_MEM+152(,%ecx,4), %eax
+      movl %eax, 0(%edi)
   loc_27:
+      movl __GLOBAL_MEM+68, %edi
+      movl __GLOBAL_MEM+104(,%edi,4), %edi
+      movl %edi, __GLOBAL_MEM+84
+      movl __GLOBAL_MEM+36, %eax
       negl %eax
-      jmp end_abs
+      movl %edi, __GLOBAL_MEM+88
+      movl __GLOBAL_MEM+84, %edi
+      movl __GLOBAL_MEM+136(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %eax, 0(%edi)
+      movl __GLOBAL_MEM+88, %edi
+      movl __GLOBAL_MEM+84, %edi
+      movl __GLOBAL_MEM+76(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl $(2), 0(%edi)
+  end_abs:
+      movl __GLOBAL_MEM+68, %edi
+      movl __GLOBAL_MEM+116(,%edi,4), %edi
+      movl %edi, __GLOBAL_MEM+84
+      movl __GLOBAL_MEM+60, %ebp
+      movl __GLOBAL_MEM+64, %esp
+      movl 0(%esp), %ebp
+      addl $(4), %esp
+      movl %edi, __GLOBAL_MEM+88
+      movl __GLOBAL_MEM+84, %edi
+      movl __GLOBAL_MEM+144(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %ebp, 0(%edi)
+      movl __GLOBAL_MEM+88, %edi
+      movl %edi, __GLOBAL_MEM+88
+      movl __GLOBAL_MEM+84, %edi
+      movl __GLOBAL_MEM+128(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %esp, 0(%edi)
+      movl __GLOBAL_MEM+88, %edi
+      movl __GLOBAL_MEM+84, %edi
+      movl __GLOBAL_MEM+76(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl $(-1), 0(%edi)
+      jmp abs_val__loop
+  abs_val__exit:
+      movl __GLOBAL_MEM+64, %esp
+      ret
   
   .global main
   main:
-      pushl %ebp
+      movl %eax, __GLOBAL_MEM+36
+      movl %ebx, __GLOBAL_MEM+40
+      movl %ecx, __GLOBAL_MEM+44
+      movl %edx, __GLOBAL_MEM+48
+      movl %esi, __GLOBAL_MEM+52
+      movl %edi, __GLOBAL_MEM+56
+      movl %ebp, __GLOBAL_MEM+60
+      movl %esp, __GLOBAL_MEM+64
+      movl $(0), __GLOBAL_MEM+160
+  main__loop:
+      cmpl $(-1), __GLOBAL_MEM+160
+      je main__exit
+  main__entry_block:
+      movl __GLOBAL_MEM+160, %edi
+      movl __GLOBAL_MEM+184(,%edi,4), %edi
+      movl %edi, __GLOBAL_MEM+176
+      movl __GLOBAL_MEM+36, %eax
+      movl __GLOBAL_MEM+60, %ebp
+      movl __GLOBAL_MEM+64, %esp
+      subl $(4), %esp
+      movl %ebp, 0(%esp)
       movl %esp, %ebp
-      pushl __GLOBAL_MEM+28
-      call abs_val
+      movl %edi, __GLOBAL_MEM+180
+      movl __GLOBAL_MEM+176, %edi
+      movl __GLOBAL_MEM+220(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %eax, 0(%edi)
+      movl __GLOBAL_MEM+180, %edi
+      movl __GLOBAL_MEM+28, %eax
+      subl $(4), %esp
+      movl %eax, 0(%esp)
+      movl __GLOBAL_MEM+32, %eax
+      movl %edi, __GLOBAL_MEM+180
+      movl __GLOBAL_MEM+176, %edi
+      call *__GLOBAL_MEM+252(,%edi,4)
+      movl __GLOBAL_MEM+180, %edi
+      movl %edi, __GLOBAL_MEM+180
+      movl __GLOBAL_MEM+176, %edi
+      movl __GLOBAL_MEM+236(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %eax, 0(%edi)
+      movl __GLOBAL_MEM+180, %edi
+      movl %edi, __GLOBAL_MEM+180
+      movl __GLOBAL_MEM+176, %edi
+      movl __GLOBAL_MEM+244(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %ebp, 0(%edi)
+      movl __GLOBAL_MEM+180, %edi
+      movl %edi, __GLOBAL_MEM+180
+      movl __GLOBAL_MEM+176, %edi
+      movl __GLOBAL_MEM+228(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %esp, 0(%edi)
+      movl __GLOBAL_MEM+180, %edi
+      movl __GLOBAL_MEM+176, %edi
+      movl __GLOBAL_MEM+168(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl $(1), 0(%edi)
+  loc_43:
+      movl __GLOBAL_MEM+160, %edi
+      movl __GLOBAL_MEM+196(,%edi,4), %edi
+      movl %edi, __GLOBAL_MEM+176
+      movl __GLOBAL_MEM+36, %eax
+      movl __GLOBAL_MEM+64, %esp
       addl $(4), %esp
-      pushl %eax
-      pushl __GLOBAL_MEM+28
-      pushl $(__GLOBAL_MEM)
-      call printf
+      subl $(4), %esp
+      movl %eax, 0(%esp)
+      movl %edi, __GLOBAL_MEM+180
+      movl __GLOBAL_MEM+176, %edi
+      movl __GLOBAL_MEM+220(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %eax, 0(%edi)
+      movl __GLOBAL_MEM+180, %edi
+      movl __GLOBAL_MEM+28, %eax
+      subl $(4), %esp
+      movl %eax, 0(%esp)
+      movl __GLOBAL_MEM+32, %eax
+      subl $(4), %esp
+      movl $(__GLOBAL_MEM), 0(%esp)
+      movl %edi, __GLOBAL_MEM+180
+      movl __GLOBAL_MEM+176, %edi
+      call *__GLOBAL_MEM+260(,%edi,4)
+      movl __GLOBAL_MEM+180, %edi
+      movl %edi, __GLOBAL_MEM+180
+      movl __GLOBAL_MEM+176, %edi
+      movl __GLOBAL_MEM+236(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %eax, 0(%edi)
+      movl __GLOBAL_MEM+180, %edi
+      movl %edi, __GLOBAL_MEM+180
+      movl __GLOBAL_MEM+176, %edi
+      movl __GLOBAL_MEM+228(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %esp, 0(%edi)
+      movl __GLOBAL_MEM+180, %edi
+      movl __GLOBAL_MEM+176, %edi
+      movl __GLOBAL_MEM+168(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl $(2), 0(%edi)
+  loc_51:
+      movl __GLOBAL_MEM+160, %edi
+      movl __GLOBAL_MEM+208(,%edi,4), %edi
+      movl %edi, __GLOBAL_MEM+176
+      movl __GLOBAL_MEM+36, %eax
+      movl __GLOBAL_MEM+60, %ebp
+      movl __GLOBAL_MEM+64, %esp
       addl $(12), %esp
       xorl %eax, %eax
-      leave
+      movl %ebp, %esp
+      movl 0(%esp), %ebp
+      addl $(4), %esp
+      movl %edi, __GLOBAL_MEM+180
+      movl __GLOBAL_MEM+176, %edi
+      movl __GLOBAL_MEM+236(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %eax, 0(%edi)
+      movl __GLOBAL_MEM+180, %edi
+      movl %edi, __GLOBAL_MEM+180
+      movl __GLOBAL_MEM+176, %edi
+      movl __GLOBAL_MEM+244(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %ebp, 0(%edi)
+      movl __GLOBAL_MEM+180, %edi
+      movl %edi, __GLOBAL_MEM+180
+      movl __GLOBAL_MEM+176, %edi
+      movl __GLOBAL_MEM+228(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %esp, 0(%edi)
+      movl __GLOBAL_MEM+180, %edi
+      movl __GLOBAL_MEM+176, %edi
+      movl __GLOBAL_MEM+168(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl $(-1), 0(%edi)
+      jmp main__loop
+  main__exit:
+      movl __GLOBAL_MEM+64, %esp
       ret
   
   '''
@@ -48,30 +290,168 @@
   __GLOBAL_MEM:
       .int 0 # counter (+0)
       .int 5 # limit (+4)
-      .asciz "%d
-  " # fmtstr (+8)
+      .asciz "%d\n" # fmtstr (+8)
+      .int 0 # scratch (+12)
+      .int 0 # EAX (+16)
+      .int 0 # EBX (+20)
+      .int 0 # ECX (+24)
+      .int 0 # EDX (+28)
+      .int 0 # ESI (+32)
+      .int 0 # EDI (+36)
+      .int 0 # EBP (+40)
+      .int 0 # ESP (+44)
+      .int 0 # dispatch_var (+48)
+      .int 0 # scratch (+52)
+      .int 52, 48 # dispatch_targets (+56)
+      .int 0 # temp_enabled (+64)
+      .int 0 # temp_write_reg (+68)
+      .int 1, 0, 0, 0, 0 # block_0_enabled (+72)
+      .int 0, 1, 0, 0, 0 # block_1_enabled (+92)
+      .int 0, 0, 1, 0, 0 # block_2_enabled (+112)
+      .int 0, 0, 0, 1, 0 # block_3_enabled (+132)
+      .int 0, 0, 0, 0, 1 # block_4_enabled (+152)
+      .int 52, 16 # write_target_16 (+172)
+      .int 52, 0 # write_target_0 (+180)
+      .int 52, 44 # write_target_44 (+188)
+      .int __noop_stub, printf # call_2_0_targets (+196)
+      .int 4, 2 # cond_dispatch_1 (+204)
   
   .section .text
   
+  __noop_stub:
+      ret
+  
   .global main
   main:
+      movl %eax, __GLOBAL_MEM+16
+      movl %ebx, __GLOBAL_MEM+20
+      movl %ecx, __GLOBAL_MEM+24
+      movl %edx, __GLOBAL_MEM+28
+      movl %esi, __GLOBAL_MEM+32
+      movl %edi, __GLOBAL_MEM+36
+      movl %ebp, __GLOBAL_MEM+40
+      movl %esp, __GLOBAL_MEM+44
+      movl $(0), __GLOBAL_MEM+48
+  main__loop:
+      cmpl $(-1), __GLOBAL_MEM+48
+      je main__exit
+  main__entry_block:
+      movl __GLOBAL_MEM+48, %edi
+      movl __GLOBAL_MEM+72(,%edi,4), %edi
+      movl %edi, __GLOBAL_MEM+64
+      movl __GLOBAL_MEM+16, %eax
       movl __GLOBAL_MEM, %eax
+      movl %edi, __GLOBAL_MEM+68
+      movl __GLOBAL_MEM+64, %edi
+      movl __GLOBAL_MEM+172(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %eax, 0(%edi)
+      movl __GLOBAL_MEM+68, %edi
+      movl __GLOBAL_MEM+64, %edi
+      movl __GLOBAL_MEM+56(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl $(1), 0(%edi)
   check_loop:
+      movl __GLOBAL_MEM+48, %edi
+      movl __GLOBAL_MEM+92(,%edi,4), %edi
+      movl %edi, __GLOBAL_MEM+64
+      movl __GLOBAL_MEM+16, %eax
       cmpl __GLOBAL_MEM+4, %eax
-      jge exit_block
-      jmp body
-  exit_block:
-      xorl %eax, %eax
-      ret
+      movl %edi, __GLOBAL_MEM+68
+      movl __GLOBAL_MEM+64, %edi
+      movl __GLOBAL_MEM+172(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %eax, 0(%edi)
+      movl __GLOBAL_MEM+68, %edi
+      movl __GLOBAL_MEM+64, %edi
+      movl __GLOBAL_MEM+56(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      setl %cl
+      movzbl %cl, %ecx
+      movl __GLOBAL_MEM+204(,%ecx,4), %eax
+      movl %eax, 0(%edi)
   body:
-      pushl %eax
-      pushl $(__GLOBAL_MEM+8)
-      call printf
+      movl __GLOBAL_MEM+48, %edi
+      movl __GLOBAL_MEM+112(,%edi,4), %edi
+      movl %edi, __GLOBAL_MEM+64
+      movl __GLOBAL_MEM+16, %eax
+      movl __GLOBAL_MEM+44, %esp
+      subl $(4), %esp
+      movl %eax, 0(%esp)
+      subl $(4), %esp
+      movl $(__GLOBAL_MEM+8), 0(%esp)
+      movl %edi, __GLOBAL_MEM+68
+      movl __GLOBAL_MEM+64, %edi
+      call *__GLOBAL_MEM+196(,%edi,4)
+      movl __GLOBAL_MEM+68, %edi
+      movl %edi, __GLOBAL_MEM+68
+      movl __GLOBAL_MEM+64, %edi
+      movl __GLOBAL_MEM+172(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %eax, 0(%edi)
+      movl __GLOBAL_MEM+68, %edi
+      movl %edi, __GLOBAL_MEM+68
+      movl __GLOBAL_MEM+64, %edi
+      movl __GLOBAL_MEM+188(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %esp, 0(%edi)
+      movl __GLOBAL_MEM+68, %edi
+      movl __GLOBAL_MEM+64, %edi
+      movl __GLOBAL_MEM+56(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl $(3), 0(%edi)
+  loc_23:
+      movl __GLOBAL_MEM+48, %edi
+      movl __GLOBAL_MEM+132(,%edi,4), %edi
+      movl %edi, __GLOBAL_MEM+64
+      movl __GLOBAL_MEM+16, %eax
+      movl __GLOBAL_MEM+44, %esp
       addl $(4), %esp
-      popl %eax
+      movl 0(%esp), %eax
+      addl $(4), %esp
       incl %eax
-      movl %eax, __GLOBAL_MEM
-      jmp check_loop
+      movl %edi, __GLOBAL_MEM+68
+      movl __GLOBAL_MEM+64, %edi
+      movl __GLOBAL_MEM+180(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %eax, 0(%edi)
+      movl __GLOBAL_MEM+68, %edi
+      movl %edi, __GLOBAL_MEM+68
+      movl __GLOBAL_MEM+64, %edi
+      movl __GLOBAL_MEM+172(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %eax, 0(%edi)
+      movl __GLOBAL_MEM+68, %edi
+      movl %edi, __GLOBAL_MEM+68
+      movl __GLOBAL_MEM+64, %edi
+      movl __GLOBAL_MEM+188(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %esp, 0(%edi)
+      movl __GLOBAL_MEM+68, %edi
+      movl __GLOBAL_MEM+64, %edi
+      movl __GLOBAL_MEM+56(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl $(1), 0(%edi)
+  exit_block:
+      movl __GLOBAL_MEM+48, %edi
+      movl __GLOBAL_MEM+152(,%edi,4), %edi
+      movl %edi, __GLOBAL_MEM+64
+      movl __GLOBAL_MEM+16, %eax
+      xorl %eax, %eax
+      movl %edi, __GLOBAL_MEM+68
+      movl __GLOBAL_MEM+64, %edi
+      movl __GLOBAL_MEM+172(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %eax, 0(%edi)
+      movl __GLOBAL_MEM+68, %edi
+      movl __GLOBAL_MEM+64, %edi
+      movl __GLOBAL_MEM+56(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl $(-1), 0(%edi)
+      jmp main__loop
+  main__exit:
+      movl __GLOBAL_MEM+44, %esp
+      ret
   
   '''
 # ---
@@ -79,49 +459,528 @@
   '''
   .section .data
   __GLOBAL_MEM:
-      .asciz "Value %d is High
-  " # msg_high (+0)
-      .zero 2 # __pad_18 (+18)
-      .asciz "Value %d is Low
-  " # msg_low (+20)
-      .zero 3 # __pad_37 (+37)
-      .int 10, 2, 8, 20, 5 # values (+40)
-      .int 5 # count (+60)
+      .asciz "Value %d is High\n" # msg_high (+0)
+      .asciz "Value %d is Low\n" # msg_low (+18)
+      .int 10, 2, 8, 20, 5 # values (+35)
+      .int 5 # count (+55)
+      .zero 1 # __pad_59 (+59)
+      .int 0 # scratch (+60)
+      .int 0 # EAX (+64)
+      .int 0 # EBX (+68)
+      .int 0 # ECX (+72)
+      .int 0 # EDX (+76)
+      .int 0 # ESI (+80)
+      .int 0 # EDI (+84)
+      .int 0 # EBP (+88)
+      .int 0 # ESP (+92)
+      .int 0 # dispatch_var (+96)
+      .int 0 # scratch (+100)
+      .int 100, 96 # dispatch_targets (+104)
+      .int 0 # temp_enabled (+112)
+      .int 0 # temp_write_reg (+116)
+      .int 1, 0, 0, 0, 0, 0, 0, 0, 0 # block_0_enabled (+120)
+      .int 0, 1, 0, 0, 0, 0, 0, 0, 0 # block_1_enabled (+156)
+      .int 0, 0, 1, 0, 0, 0, 0, 0, 0 # block_2_enabled (+192)
+      .int 0, 0, 0, 1, 0, 0, 0, 0, 0 # block_3_enabled (+228)
+      .int 0, 0, 0, 0, 1, 0, 0, 0, 0 # block_4_enabled (+264)
+      .int 0, 0, 0, 0, 0, 1, 0, 0, 0 # block_5_enabled (+300)
+      .int 0, 0, 0, 0, 0, 0, 1, 0, 0 # block_6_enabled (+336)
+      .int 0, 0, 0, 0, 0, 0, 0, 1, 0 # block_7_enabled (+372)
+      .int 0, 0, 0, 0, 0, 0, 0, 0, 1 # block_8_enabled (+408)
+      .int 100, 88 # write_target_88 (+444)
+      .int 100, 64 # write_target_64 (+452)
+      .int 100, 80 # write_target_80 (+460)
+      .int 100, 92 # write_target_92 (+468)
+      .int __noop_stub, printf # call_3_0_targets (+476)
+      .int __noop_stub, printf # call_6_0_targets (+484)
+      .int 8, 2 # cond_dispatch_1 (+492)
+      .int 6, 3 # cond_dispatch_2 (+500)
   
   .section .text
   
+  __noop_stub:
+      ret
+  
   .global main
   main:
-      pushl %ebp
+      movl %eax, __GLOBAL_MEM+64
+      movl %ebx, __GLOBAL_MEM+68
+      movl %ecx, __GLOBAL_MEM+72
+      movl %edx, __GLOBAL_MEM+76
+      movl %esi, __GLOBAL_MEM+80
+      movl %edi, __GLOBAL_MEM+84
+      movl %ebp, __GLOBAL_MEM+88
+      movl %esp, __GLOBAL_MEM+92
+      movl $(0), __GLOBAL_MEM+96
+  main__loop:
+      cmpl $(-1), __GLOBAL_MEM+96
+      je main__exit
+  main__entry_block:
+      movl __GLOBAL_MEM+96, %edi
+      movl __GLOBAL_MEM+120(,%edi,4), %edi
+      movl %edi, __GLOBAL_MEM+112
+      movl __GLOBAL_MEM+88, %ebp
+      movl __GLOBAL_MEM+80, %esi
+      movl __GLOBAL_MEM+92, %esp
+      subl $(4), %esp
+      movl %ebp, 0(%esp)
       movl %esp, %ebp
       xorl %esi, %esi
+      movl %edi, __GLOBAL_MEM+116
+      movl __GLOBAL_MEM+112, %edi
+      movl __GLOBAL_MEM+444(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %ebp, 0(%edi)
+      movl __GLOBAL_MEM+116, %edi
+      movl %edi, __GLOBAL_MEM+116
+      movl __GLOBAL_MEM+112, %edi
+      movl __GLOBAL_MEM+460(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %esi, 0(%edi)
+      movl __GLOBAL_MEM+116, %edi
+      movl %edi, __GLOBAL_MEM+116
+      movl __GLOBAL_MEM+112, %edi
+      movl __GLOBAL_MEM+468(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %esp, 0(%edi)
+      movl __GLOBAL_MEM+116, %edi
+      movl __GLOBAL_MEM+112, %edi
+      movl __GLOBAL_MEM+104(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl $(1), 0(%edi)
   process_loop:
-      cmpl __GLOBAL_MEM+60, %esi
-      jge end_main
-      jmp loc_23
-  end_main:
-      xorl %eax, %eax
-      leave
-      ret
+      movl __GLOBAL_MEM+96, %edi
+      movl __GLOBAL_MEM+156(,%edi,4), %edi
+      movl %edi, __GLOBAL_MEM+112
+      movl __GLOBAL_MEM+80, %esi
+      cmpl __GLOBAL_MEM+55, %esi
+      movl %edi, __GLOBAL_MEM+116
+      movl __GLOBAL_MEM+112, %edi
+      movl __GLOBAL_MEM+460(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %esi, 0(%edi)
+      movl __GLOBAL_MEM+116, %edi
+      movl __GLOBAL_MEM+112, %edi
+      movl __GLOBAL_MEM+104(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      setl %cl
+      movzbl %cl, %ecx
+      movl __GLOBAL_MEM+492(,%ecx,4), %eax
+      movl %eax, 0(%edi)
   loc_23:
-      movl __GLOBAL_MEM+40(,%esi,4), %eax
+      movl __GLOBAL_MEM+96, %edi
+      movl __GLOBAL_MEM+192(,%edi,4), %edi
+      movl %edi, __GLOBAL_MEM+112
+      movl __GLOBAL_MEM+64, %eax
+      movl __GLOBAL_MEM+80, %esi
+      movl __GLOBAL_MEM+35(,%esi,4), %eax
       cmpl $(8), %eax
-      jg is_high
-      jmp is_low
+      movl %edi, __GLOBAL_MEM+116
+      movl __GLOBAL_MEM+112, %edi
+      movl __GLOBAL_MEM+452(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %eax, 0(%edi)
+      movl __GLOBAL_MEM+116, %edi
+      movl %edi, __GLOBAL_MEM+116
+      movl __GLOBAL_MEM+112, %edi
+      movl __GLOBAL_MEM+460(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %esi, 0(%edi)
+      movl __GLOBAL_MEM+116, %edi
+      movl __GLOBAL_MEM+112, %edi
+      movl __GLOBAL_MEM+104(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      setg %cl
+      movzbl %cl, %ecx
+      movl __GLOBAL_MEM+500(,%ecx,4), %eax
+      movl %eax, 0(%edi)
   is_high:
-      pushl %eax
-      pushl $(__GLOBAL_MEM)
-      call printf
+      movl __GLOBAL_MEM+96, %edi
+      movl __GLOBAL_MEM+228(,%edi,4), %edi
+      movl %edi, __GLOBAL_MEM+112
+      movl __GLOBAL_MEM+64, %eax
+      movl __GLOBAL_MEM+92, %esp
+      subl $(4), %esp
+      movl %eax, 0(%esp)
+      subl $(4), %esp
+      movl $(__GLOBAL_MEM), 0(%esp)
+      movl %edi, __GLOBAL_MEM+116
+      movl __GLOBAL_MEM+112, %edi
+      call *__GLOBAL_MEM+476(,%edi,4)
+      movl __GLOBAL_MEM+116, %edi
+      movl %edi, __GLOBAL_MEM+116
+      movl __GLOBAL_MEM+112, %edi
+      movl __GLOBAL_MEM+452(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %eax, 0(%edi)
+      movl __GLOBAL_MEM+116, %edi
+      movl %edi, __GLOBAL_MEM+116
+      movl __GLOBAL_MEM+112, %edi
+      movl __GLOBAL_MEM+468(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %esp, 0(%edi)
+      movl __GLOBAL_MEM+116, %edi
+      movl __GLOBAL_MEM+112, %edi
+      movl __GLOBAL_MEM+104(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl $(4), 0(%edi)
+  loc_42:
+      movl __GLOBAL_MEM+96, %edi
+      movl __GLOBAL_MEM+264(,%edi,4), %edi
+      movl %edi, __GLOBAL_MEM+112
+      movl __GLOBAL_MEM+92, %esp
       addl $(8), %esp
+      movl %edi, __GLOBAL_MEM+116
+      movl __GLOBAL_MEM+112, %edi
+      movl __GLOBAL_MEM+468(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %esp, 0(%edi)
+      movl __GLOBAL_MEM+116, %edi
+      movl __GLOBAL_MEM+112, %edi
+      movl __GLOBAL_MEM+104(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl $(5), 0(%edi)
   next_iter:
+      movl __GLOBAL_MEM+96, %edi
+      movl __GLOBAL_MEM+300(,%edi,4), %edi
+      movl %edi, __GLOBAL_MEM+112
+      movl __GLOBAL_MEM+80, %esi
       incl %esi
-      jmp process_loop
+      movl %edi, __GLOBAL_MEM+116
+      movl __GLOBAL_MEM+112, %edi
+      movl __GLOBAL_MEM+460(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %esi, 0(%edi)
+      movl __GLOBAL_MEM+116, %edi
+      movl __GLOBAL_MEM+112, %edi
+      movl __GLOBAL_MEM+104(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl $(1), 0(%edi)
   is_low:
-      pushl %eax
-      pushl $(__GLOBAL_MEM+20)
-      call printf
+      movl __GLOBAL_MEM+96, %edi
+      movl __GLOBAL_MEM+336(,%edi,4), %edi
+      movl %edi, __GLOBAL_MEM+112
+      movl __GLOBAL_MEM+64, %eax
+      movl __GLOBAL_MEM+92, %esp
+      subl $(4), %esp
+      movl %eax, 0(%esp)
+      subl $(4), %esp
+      movl $(__GLOBAL_MEM+18), 0(%esp)
+      movl %edi, __GLOBAL_MEM+116
+      movl __GLOBAL_MEM+112, %edi
+      call *__GLOBAL_MEM+484(,%edi,4)
+      movl __GLOBAL_MEM+116, %edi
+      movl %edi, __GLOBAL_MEM+116
+      movl __GLOBAL_MEM+112, %edi
+      movl __GLOBAL_MEM+452(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %eax, 0(%edi)
+      movl __GLOBAL_MEM+116, %edi
+      movl %edi, __GLOBAL_MEM+116
+      movl __GLOBAL_MEM+112, %edi
+      movl __GLOBAL_MEM+468(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %esp, 0(%edi)
+      movl __GLOBAL_MEM+116, %edi
+      movl __GLOBAL_MEM+112, %edi
+      movl __GLOBAL_MEM+104(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl $(7), 0(%edi)
+  loc_34:
+      movl __GLOBAL_MEM+96, %edi
+      movl __GLOBAL_MEM+372(,%edi,4), %edi
+      movl %edi, __GLOBAL_MEM+112
+      movl __GLOBAL_MEM+92, %esp
       addl $(8), %esp
-      jmp next_iter
+      movl %edi, __GLOBAL_MEM+116
+      movl __GLOBAL_MEM+112, %edi
+      movl __GLOBAL_MEM+468(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %esp, 0(%edi)
+      movl __GLOBAL_MEM+116, %edi
+      movl __GLOBAL_MEM+112, %edi
+      movl __GLOBAL_MEM+104(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl $(5), 0(%edi)
+  end_main:
+      movl __GLOBAL_MEM+96, %edi
+      movl __GLOBAL_MEM+408(,%edi,4), %edi
+      movl %edi, __GLOBAL_MEM+112
+      movl __GLOBAL_MEM+64, %eax
+      movl __GLOBAL_MEM+88, %ebp
+      movl __GLOBAL_MEM+92, %esp
+      xorl %eax, %eax
+      movl %ebp, %esp
+      movl 0(%esp), %ebp
+      addl $(4), %esp
+      movl %edi, __GLOBAL_MEM+116
+      movl __GLOBAL_MEM+112, %edi
+      movl __GLOBAL_MEM+452(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %eax, 0(%edi)
+      movl __GLOBAL_MEM+116, %edi
+      movl %edi, __GLOBAL_MEM+116
+      movl __GLOBAL_MEM+112, %edi
+      movl __GLOBAL_MEM+444(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %ebp, 0(%edi)
+      movl __GLOBAL_MEM+116, %edi
+      movl %edi, __GLOBAL_MEM+116
+      movl __GLOBAL_MEM+112, %edi
+      movl __GLOBAL_MEM+468(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %esp, 0(%edi)
+      movl __GLOBAL_MEM+116, %edi
+      movl __GLOBAL_MEM+112, %edi
+      movl __GLOBAL_MEM+104(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl $(-1), 0(%edi)
+      jmp main__loop
+  main__exit:
+      movl __GLOBAL_MEM+92, %esp
+      ret
+  
+  '''
+# ---
+# name: test_e2e_transformation_snapshot[syscall.s][syscall_obfuscated]
+  '''
+  .section .data
+  __GLOBAL_MEM:
+      .ascii "maria" # x1 (+0)
+      .ascii "maria1" # x2 (+5)
+      .ascii "maria2" # x3 (+11)
+      .zero 3 # __pad_17 (+17)
+      .int 0 # scratch (+20)
+      .int 0 # EAX (+24)
+      .int 0 # EBX (+28)
+      .int 0 # ECX (+32)
+      .int 0 # EDX (+36)
+      .int 0 # ESI (+40)
+      .int 0 # EDI (+44)
+      .int 0 # EBP (+48)
+      .int 0 # ESP (+52)
+      .int 0 # dispatch_var (+56)
+      .int 0 # scratch (+60)
+      .int 60, 56 # dispatch_targets (+64)
+      .int 0 # temp_enabled (+72)
+      .int 0 # temp_write_reg (+76)
+      .int 1, 0 # block_0_enabled (+80)
+      .int 0, 1 # block_1_enabled (+88)
+      .int 60, 24 # write_target_24 (+96)
+      .int 60, 32 # write_target_32 (+104)
+      .int 60, 28 # write_target_28 (+112)
+      .int 60, 36 # write_target_36 (+120)
+  
+  .section .text
+  
+  __noop_stub:
+      ret
+  
+  .global main
+  main:
+      movl %eax, __GLOBAL_MEM+24
+      movl %ebx, __GLOBAL_MEM+28
+      movl %ecx, __GLOBAL_MEM+32
+      movl %edx, __GLOBAL_MEM+36
+      movl %esi, __GLOBAL_MEM+40
+      movl %edi, __GLOBAL_MEM+44
+      movl %ebp, __GLOBAL_MEM+48
+      movl %esp, __GLOBAL_MEM+52
+      movl $(0), __GLOBAL_MEM+56
+  main__loop:
+      cmpl $(-1), __GLOBAL_MEM+56
+      je main__exit
+  main__entry_block:
+      movl __GLOBAL_MEM+56, %edi
+      movl __GLOBAL_MEM+80(,%edi,4), %edi
+      movl %edi, __GLOBAL_MEM+72
+      movl __GLOBAL_MEM+24, %eax
+      movl __GLOBAL_MEM+28, %ebx
+      movl __GLOBAL_MEM+32, %ecx
+      movl __GLOBAL_MEM+36, %edx
+      movl $(4), %eax
+      movl $(1), %ebx
+      movl $(__GLOBAL_MEM), %ecx
+      movl $(14), %edx
+      int $(128)
+      movl %edi, __GLOBAL_MEM+76
+      movl __GLOBAL_MEM+72, %edi
+      movl __GLOBAL_MEM+96(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %eax, 0(%edi)
+      movl __GLOBAL_MEM+76, %edi
+      movl %edi, __GLOBAL_MEM+76
+      movl __GLOBAL_MEM+72, %edi
+      movl __GLOBAL_MEM+112(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %ebx, 0(%edi)
+      movl __GLOBAL_MEM+76, %edi
+      movl %edi, __GLOBAL_MEM+76
+      movl __GLOBAL_MEM+72, %edi
+      movl __GLOBAL_MEM+104(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %ecx, 0(%edi)
+      movl __GLOBAL_MEM+76, %edi
+      movl %edi, __GLOBAL_MEM+76
+      movl __GLOBAL_MEM+72, %edi
+      movl __GLOBAL_MEM+120(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %edx, 0(%edi)
+      movl __GLOBAL_MEM+76, %edi
+      movl __GLOBAL_MEM+72, %edi
+      movl __GLOBAL_MEM+64(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl $(1), 0(%edi)
+  end:
+      movl __GLOBAL_MEM+56, %edi
+      movl __GLOBAL_MEM+88(,%edi,4), %edi
+      movl %edi, __GLOBAL_MEM+72
+      movl __GLOBAL_MEM+24, %eax
+      movl __GLOBAL_MEM+28, %ebx
+      movl $(1), %eax
+      xorl %ebx, %ebx
+      int $(128)
+      movl %edi, __GLOBAL_MEM+76
+      movl __GLOBAL_MEM+72, %edi
+      movl __GLOBAL_MEM+96(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %eax, 0(%edi)
+      movl __GLOBAL_MEM+76, %edi
+      movl %edi, __GLOBAL_MEM+76
+      movl __GLOBAL_MEM+72, %edi
+      movl __GLOBAL_MEM+112(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %ebx, 0(%edi)
+      movl __GLOBAL_MEM+76, %edi
+      movl __GLOBAL_MEM+72, %edi
+      movl __GLOBAL_MEM+64(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl $(-1), 0(%edi)
+      jmp main__loop
+  main__exit:
+      movl __GLOBAL_MEM+52, %esp
+      ret
+  
+  '''
+# ---
+# name: test_e2e_transformation_snapshot[syscall2.s][syscall2_obfuscated]
+  '''
+  .section .data
+  __GLOBAL_MEM:
+      .ascii "maria" # x1 (+0)
+      .int 1634165602 # x2 (+5)
+      .ascii "maria2" # x3 (+9)
+      .zero 1 # __pad_15 (+15)
+      .int 0 # scratch (+16)
+      .int 0 # EAX (+20)
+      .int 0 # EBX (+24)
+      .int 0 # ECX (+28)
+      .int 0 # EDX (+32)
+      .int 0 # ESI (+36)
+      .int 0 # EDI (+40)
+      .int 0 # EBP (+44)
+      .int 0 # ESP (+48)
+      .int 0 # dispatch_var (+52)
+      .int 0 # scratch (+56)
+      .int 56, 52 # dispatch_targets (+60)
+      .int 0 # temp_enabled (+68)
+      .int 0 # temp_write_reg (+72)
+      .int 1, 0 # block_0_enabled (+76)
+      .int 0, 1 # block_1_enabled (+84)
+      .int 56, 24 # write_target_24 (+92)
+      .int 56, 32 # write_target_32 (+100)
+      .int 56, 20 # write_target_20 (+108)
+      .int 56, 28 # write_target_28 (+116)
+  
+  .section .text
+  
+  __noop_stub:
+      ret
+  
+  .global main
+  main:
+      movl %eax, __GLOBAL_MEM+20
+      movl %ebx, __GLOBAL_MEM+24
+      movl %ecx, __GLOBAL_MEM+28
+      movl %edx, __GLOBAL_MEM+32
+      movl %esi, __GLOBAL_MEM+36
+      movl %edi, __GLOBAL_MEM+40
+      movl %ebp, __GLOBAL_MEM+44
+      movl %esp, __GLOBAL_MEM+48
+      movl $(0), __GLOBAL_MEM+52
+  main__loop:
+      cmpl $(-1), __GLOBAL_MEM+52
+      je main__exit
+  main__entry_block:
+      movl __GLOBAL_MEM+52, %edi
+      movl __GLOBAL_MEM+76(,%edi,4), %edi
+      movl %edi, __GLOBAL_MEM+68
+      movl __GLOBAL_MEM+20, %eax
+      movl __GLOBAL_MEM+24, %ebx
+      movl __GLOBAL_MEM+28, %ecx
+      movl __GLOBAL_MEM+32, %edx
+      movl $(4), %eax
+      movl $(1), %ebx
+      movl $(__GLOBAL_MEM), %ecx
+      movl $(14), %edx
+      int $(128)
+      movl %edi, __GLOBAL_MEM+72
+      movl __GLOBAL_MEM+68, %edi
+      movl __GLOBAL_MEM+108(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %eax, 0(%edi)
+      movl __GLOBAL_MEM+72, %edi
+      movl %edi, __GLOBAL_MEM+72
+      movl __GLOBAL_MEM+68, %edi
+      movl __GLOBAL_MEM+92(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %ebx, 0(%edi)
+      movl __GLOBAL_MEM+72, %edi
+      movl %edi, __GLOBAL_MEM+72
+      movl __GLOBAL_MEM+68, %edi
+      movl __GLOBAL_MEM+116(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %ecx, 0(%edi)
+      movl __GLOBAL_MEM+72, %edi
+      movl %edi, __GLOBAL_MEM+72
+      movl __GLOBAL_MEM+68, %edi
+      movl __GLOBAL_MEM+100(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %edx, 0(%edi)
+      movl __GLOBAL_MEM+72, %edi
+      movl __GLOBAL_MEM+68, %edi
+      movl __GLOBAL_MEM+60(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl $(1), 0(%edi)
+  end:
+      movl __GLOBAL_MEM+52, %edi
+      movl __GLOBAL_MEM+84(,%edi,4), %edi
+      movl %edi, __GLOBAL_MEM+68
+      movl __GLOBAL_MEM+20, %eax
+      movl __GLOBAL_MEM+24, %ebx
+      movl $(1), %eax
+      xorl %ebx, %ebx
+      int $(128)
+      movl %edi, __GLOBAL_MEM+72
+      movl __GLOBAL_MEM+68, %edi
+      movl __GLOBAL_MEM+108(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %eax, 0(%edi)
+      movl __GLOBAL_MEM+72, %edi
+      movl %edi, __GLOBAL_MEM+72
+      movl __GLOBAL_MEM+68, %edi
+      movl __GLOBAL_MEM+92(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl %ebx, 0(%edi)
+      movl __GLOBAL_MEM+72, %edi
+      movl __GLOBAL_MEM+68, %edi
+      movl __GLOBAL_MEM+60(,%edi,4), %edi
+      leal __GLOBAL_MEM(%edi), %edi
+      movl $(-1), 0(%edi)
+      jmp main__loop
+  main__exit:
+      movl __GLOBAL_MEM+48, %esp
+      ret
   
   '''
 # ---

@@ -1,45 +1,23 @@
-from .models import BasicBlock, EdgeType
+from .models import BasicBlock, DirectSuccessor, ConditionalSuccessor, JumpCondition
 from collections import deque
-from typing import Set
+from typing import Set, assert_never
 
 
-def human_readable(block: BasicBlock) -> str:
-    lines = []
-
-    def _recurse(curr_block: BasicBlock, visited: Set[str], level: int, edge_type: str):
-        indent = "    " * level
-        instr_indent = indent + "   "
-
-        is_cycle = curr_block.name in visited
-        cycle_msg = " (CYCLE DETECTED - Stopping)" if is_cycle else ""
-        lines.append(f"{indent}|- [{edge_type}] -> {curr_block.name}{cycle_msg}")
-
-        for instr in curr_block.instructions:
-            lines.append(f"{instr_indent} {instr}")
-
-        if is_cycle:
-            return
-
-        new_visited = visited.copy()
-        new_visited.add(curr_block.name)
-
-        if not curr_block.successors and not is_cycle:
-            lines.append(f"{indent}    (end of flow)")
-
-        for succ_block, succ_edge in curr_block.successors:
-            _recurse(succ_block, new_visited, level + 1, succ_edge)
-
-    if block:
-        _recurse(block, set(), 0, "Start")
-
-    return "\n".join(lines)
+# Mapping from canonical condition (True path) to its inverse (False path)
+_INVERSE_CONDITIONS = {
+    JumpCondition.JE: "jne",
+    JumpCondition.JL: "jge",
+    JumpCondition.JG: "jle",
+    JumpCondition.JB: "jae",
+    JumpCondition.JA: "jbe",
+}
 
 
 def dot_graph(start_block: BasicBlock) -> str:
     output = [
         "digraph asm_flow {",
         '    node [shape=box fontname="Courier"];',
-        "    // Edge definitions: Green=True (Taken), Red=False (Not Taken)",
+        "    // Edge definitions: Green=Condition Met (e.g. je), Red=Condition Not Met (e.g. jne)",
     ]
 
     visited: Set[str] = set()
@@ -58,19 +36,36 @@ def dot_graph(start_block: BasicBlock) -> str:
         node_label = f"{block.name}\\n----------------\\n{code}"
         output.append(f'    "{block.name}" [label="{node_label}"];')
 
-        for succ_block, edge_type in block.successors:
-            attrs = ""
-            if edge_type == EdgeType.TAKEN:
-                attrs = ' [color="green" label="true" fontcolor="green"]'
-            elif edge_type == EdgeType.NOT_TAKEN:
-                attrs = ' [color="red" label="false" fontcolor="red"]'
-            else:
-                attrs = ' [color="black"]'
+        match block.successor:
+            case None:
+                continue
 
-            output.append(f'    "{block.name}" -> "{succ_block.name}"{attrs};')
+            case DirectSuccessor(next_blk):
+                output.append(
+                    f'    "{block.name}" -> "{next_blk.name}" [color="black"];'
+                )
+                if next_blk.name not in visited:
+                    queue.append(next_blk)
 
-            if succ_block.name not in visited:
-                queue.append(succ_block)
+            case ConditionalSuccessor(true_blk, false_blk, cond):
+                # True path (Green)
+                label_t = cond.value
+                output.append(
+                    f'    "{block.name}" -> "{true_blk.name}" [color="green" label="{label_t}" fontcolor="green"];'
+                )
+                if true_blk.name not in visited:
+                    queue.append(true_blk)
+
+                # False path (Red)
+                label_f = _INVERSE_CONDITIONS.get(cond, f"not {cond.value}")
+                output.append(
+                    f'    "{block.name}" -> "{false_blk.name}" [color="red" label="{label_f}" fontcolor="red"];'
+                )
+                if false_blk.name not in visited:
+                    queue.append(false_blk)
+
+            case x:
+                assert_never(x)
 
     output.append("}")
     return "\n".join(output)

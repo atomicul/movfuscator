@@ -2,6 +2,15 @@ from dataclasses import dataclass
 from typing import List, Union, assert_never
 
 
+class Symbol(str):
+    """
+    Represents a symbolic reference (e.g., a label) rather than a string literal.
+    Used to distinguish between `.asciz "hello"` and `.int my_label`.
+    """
+
+    pass
+
+
 class Allocation:
     """
     Represents a block of allocated memory.
@@ -18,7 +27,9 @@ class Allocation:
         cls,
         name: str,
         offset: int,
-        value: Union[int, float, str, List[Union[int, float]]],
+        value: Union[
+            int, float, str, bytes, "Symbol", List[Union[int, float, "Symbol"]]
+        ],
     ) -> "Allocation":
         """Factory method to create a data-initialized allocation."""
         if isinstance(value, list) and not value:
@@ -48,10 +59,14 @@ class Allocation:
         match self._value:
             case EmptyValue(size=s):
                 return s
+            case Symbol():
+                return 4
             case int() | float():
                 return 4
             case str(v):
                 return len(v) + 1
+            case bytes(v):
+                return len(v)
             case list(items):
                 return len(items) * 4
             case x:
@@ -63,12 +78,16 @@ class Allocation:
         match self._value:
             case EmptyValue():
                 return ".zero"
+            case Symbol():
+                return ".int"
             case int():
                 return ".int"
             case float():
                 return ".float"
             case str():
                 return ".asciz"
+            case bytes():
+                return ".ascii"
             case list(items):
                 # If any item is a float, the whole list is treated as floats
                 if any(isinstance(x, float) for x in items):
@@ -88,10 +107,28 @@ class Allocation:
         match self._value:
             case EmptyValue(size=s):
                 return str(s)
+            case Symbol(v):
+                return v
             case int(v) | float(v):
                 return str(v)
             case str(v):
-                return f'"{v}"'
+                # Use repr to escape special chars like \n, then convert to double-quoted
+                s = repr(v)
+                if s.startswith("'") and s.endswith("'"):
+                    inner = s[1:-1]
+                    # Convert escaped single quotes back, escape double quotes
+                    inner = inner.replace("\\'", "'").replace('"', '\\"')
+                    return f'"{inner}"'
+                return s
+            case bytes(v):
+                # repr(b'foo') -> "b'foo'". We strip the b and the outer quotes, then wrap in double quotes.
+                # This safely handles escapes like \n or \x00.
+                s = repr(v)
+                if s.startswith("b'") and s.endswith("'"):
+                    return f'"{s[2:-1]}"'
+                if s.startswith('b"') and s.endswith('"'):
+                    return f'"{s[2:-1]}"'
+                return f'"{v.decode("latin-1")}"'
             case list(items):
                 return ", ".join(str(x) for x in items)
             case x:
@@ -101,7 +138,9 @@ class Allocation:
         return f"Allocation(name='{self._name}', offset={self._offset}, value={self._value})"
 
 
-InternalValueType = Union[int, float, str, List[Union[int, float]], "EmptyValue"]
+InternalValueType = Union[
+    int, float, str, bytes, Symbol, List[Union[int, float, Symbol]], "EmptyValue"
+]
 
 
 @dataclass

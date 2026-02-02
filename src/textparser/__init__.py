@@ -1,20 +1,23 @@
 from .models import (
     BasicBlock,
+    DirectSuccessor,
+    ConditionalSuccessor,
     Instruction,
-    EdgeType,
     Function,
     Operand,
     ImmediateOperand,
     MemoryOperand,
     RegisterOperand,
+    JumpCondition,
 )
 from .expression import Expression
 from .parser import parse_cfg
-from . import visualizer
+from .visualizer import dot_graph
 
 __all__ = [
     "BasicBlock",
-    "EdgeType",
+    "DirectSuccessor",
+    "ConditionalSuccessor",
     "Expression",
     "Instruction",
     "Operand",
@@ -23,5 +26,6 @@ __all__ = [
     "RegisterOperand",
     "Function",
     "parse_cfg",
-    "visualizer",
+    "dot_graph",
+    "JumpCondition",
 ]
