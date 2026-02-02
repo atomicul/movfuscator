@@ -13,6 +13,7 @@ from textparser import (
 from .utils import iter_blocks
 
 ESP = RegisterOperand.ESP
+EBP = RegisterOperand.EBP
 EAX = RegisterOperand.EAX
 EBX = RegisterOperand.EBX
 
@@ -40,8 +41,19 @@ def expand_instruction(
             return expand_push(instr, scratch_offset, data_label)
         case "popl":
             return expand_pop(instr, scratch_offset, data_label)
+        case "leave":
+            return expand_leave()
         case _:
             return [instr]
+
+
+def expand_leave() -> List[Instruction]:
+    """leave -> movl %ebp, %esp; movl (%esp), %ebp; addl $4, %esp"""
+    return [
+        Instruction("movl", [EBP, ESP]),
+        Instruction("movl", [MemoryOperand(base=ESP), EBP]),
+        Instruction("addl", [ImmediateOperand(Expression(4)), ESP]),
+    ]
 
 
 def get_safe_scratch(op: Operand) -> RegisterOperand:

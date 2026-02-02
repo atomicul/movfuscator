@@ -84,6 +84,18 @@ def linearize_function(
     )
 
     linear_stream.append(Label(f"{cfg_func.name}__exit"))
+    # Restore ESP before ret so we return to the correct address
+    if RegisterOperand.ESP in cfg_func.reg_offsets:
+        esp_offset = cfg_func.reg_offsets[RegisterOperand.ESP]
+        linear_stream.append(
+            Instruction(
+                "movl",
+                [
+                    MemoryOperand(displacement=Expression(data_label) + esp_offset),
+                    RegisterOperand.ESP,
+                ],
+            )
+        )
     linear_stream.append(Instruction("ret", []))
 
     return Function(name=cfg_func.name, instructions=linear_stream)
@@ -365,6 +377,10 @@ def emit_write_with_indirection(
         yield instr
         return
 
+    if not is_global_mem_access(dest):
+        yield instr
+        return
+
     offset = extract_offset(dest.displacement)
     if offset is None or offset not in ctx.write_targets:
         yield instr
@@ -405,9 +421,11 @@ def emit_write_with_indirection(
     )
 
     yield Instruction(
-        "addl",
+        "leal",
         [
-            ImmediateOperand(Expression(ctx.data_label)),
+            MemoryOperand(
+                displacement=Expression(ctx.data_label), base=INDIRECTION_REG
+            ),
             INDIRECTION_REG,
         ],
     )
@@ -525,9 +543,11 @@ def emit_dispatch_update(
     )
 
     yield Instruction(
-        "addl",
+        "leal",
         [
-            ImmediateOperand(Expression(ctx.data_label)),
+            MemoryOperand(
+                displacement=Expression(ctx.data_label), base=INDIRECTION_REG
+            ),
             INDIRECTION_REG,
         ],
     )

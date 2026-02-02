@@ -42,6 +42,7 @@ def inject_context_switching(
                 create_save(reg, reg_offsets[reg], data_label)
                 for reg in TRACKED_REGISTERS
             ],
+            reg_offsets=reg_offsets,
         )
         for f in functions
     ]
