@@ -18,14 +18,8 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Set up Python
-        run: uv python install
-
       - name: Install Dependencies
-        run: |
-          uv venv
-          uv pip install -r requirements.txt
-          uv pip install -e .
+        run: uv sync
 
       - name: Run Tests
         run: uv run pytest -v -s

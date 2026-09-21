@@ -39,7 +39,7 @@ class Expression:
     def parse(text: str) -> "Expression":
         """
         Parses a string representation of a linear expression (e.g., "A + 2*B - 5").
-        Supports: Integers, Symbols, +, -, *, and Parentheses.
+        Supports: Integers (dec/hex), Symbols, +, -, *, and Parentheses.
         """
 
         tokens: List[str] = [
@@ -108,10 +108,17 @@ class Expression:
             elif token == "+":
                 consume()
                 return parse_factor()  # Unary plus
-            elif token.isdigit() or (token.startswith("-") and token[1:].isdigit()):
+
+            # Try parsing as integer (decimal or hex)
+            try:
+                val = int(token, 0)
                 consume()
-                return int(token)
-            elif re.match(r"^[a-zA-Z_.][a-zA-Z0-9_.]*$", token):
+                return val
+            except ValueError:
+                pass
+
+            # If not an integer, check for symbol
+            if re.match(r"^[a-zA-Z_.][a-zA-Z0-9_.]*$", token):
                 consume()
                 return Expression(token)
             else:

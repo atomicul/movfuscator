@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from symbolsresolver import Instruction
+from blockpreprocessor import Instruction
 from typing import List, Union
 
 

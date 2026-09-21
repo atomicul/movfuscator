@@ -37,6 +37,10 @@ def generate_text_section(linearized_functions: list) -> str:
     """Generates the assembly lines for the .text section."""
     lines = [".section .text"]
 
+    lines.append("")
+    lines.append("__noop_stub:")
+    lines.append("    ret")
+
     for func in linearized_functions:
         lines.append("")
         lines.append(f".global {func.name}")

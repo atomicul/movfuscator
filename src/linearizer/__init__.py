@@ -1,6 +1,6 @@
 from .linearizer import get_linearized_asm
 from .models import Function, Label
-from symbolsresolver import (
+from blockpreprocessor import (
     Instruction,
     Operand,
     ImmediateOperand,

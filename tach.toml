@@ -1,0 +1,42 @@
+interfaces = []
+exclude = [
+    "**/*__pycache__",
+    "**/*egg-info",
+    "**/docs",
+    "**/tests",
+    "**/venv",
+]
+source_roots = ["src",
+]
+
+[[modules ]]
+path = "memorymanager"
+depends_on = []
+
+[[modules ]]
+path = "linearizer"
+depends_on = ["blockpreprocessor"]
+
+[[modules ]]
+path = "dataparser"
+depends_on = ["memorymanager"]
+
+[[modules ]]
+path = "movfuscator"
+depends_on = ["instructionreplacer", "memorymanager"]
+
+[[modules ]]
+path = "instructionreplacer"
+depends_on = ["linearizer"]
+
+[[modules ]]
+path = "blockpreprocessor"
+depends_on = ["textparser", "dataparser"]
+
+[[modules ]]
+path = "textparser"
+depends_on = []
+
+[[modules ]]
+path = "symbolsresolver"
+depends_on = []

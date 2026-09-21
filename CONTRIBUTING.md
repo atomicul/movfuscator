@@ -67,10 +67,13 @@ dictionary of the parsed variables.
 Control Flow Graph (CFG). Encapsulates the assembly input into multiple useful
 classes (`Function`, `Instruction`, `MemoryOperand`, `RegisterOperand`,
 `ImmediateOperand`, `Expression`, etc.)
-4.  **Symbol Resolver** (`src/symbolsresolver`): Combines the output of the two
+4.  **Block Preprocessor** (`src/blockpreprocessor`): Combines the output of the two
 parsers. It receives the variable map from the Data Parser and the CFG from the
 Text Parser, replacing symbolic variable references with integer memory offsets
-into the `.data` section.
+into the `.data` section. Splits the push/pop instructions into more explicit
+add/sub + mov into/from (esp). Detects all registers used by the block, loads
+them from designated memory at the beginning and commits them in the same place
+at the end.
 5.  **Linearizer*** (`src/linearizer`): Responsible for flattening control flow.
 Uses a single `jmp` instruction to loop through all code paths. Removes all
 other jump instructions in favor of cmoves. Uses a state machine logic to decide

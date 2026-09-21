@@ -1,6 +1,7 @@
 import re
 import ast
-from typing import Iterable, List, Union, Dict
+from typing import Iterable, List, Dict
+from memorymanager import Symbol
 from .models import Allocation, Allocator
 
 
@@ -59,22 +60,25 @@ def parse_directive(
     """Parses specific directives and calls the allocator."""
 
     if directive in [".int", ".long"]:
-        # TYPE FIX: Explicitly annotate as List[Union[int, float]]
-        int_values: List[Union[int, float]] = [
-            int(x.strip()) for x in args_str.split(",") if x.strip()
+        # Use int(x, 0) to auto-detect base (e.g. 0x123 vs 123)
+        int_values: List[int | float | Symbol] = [
+            int(x.strip(), 0) for x in args_str.split(",") if x.strip()
         ]
 
         if not int_values:
             return None
 
         if len(int_values) == 1:
-            return allocator.allocate_data(int_values[0], name=label_name)
+            return allocator.allocate_data(
+                int_values[0], name=label_name, enforce_alignment=False
+            )
 
-        return allocator.allocate_data(int_values, name=label_name)
+        return allocator.allocate_data(
+            int_values, name=label_name, enforce_alignment=False
+        )
 
     elif directive == ".float":
-        # TYPE FIX: Same annotation here for floats
-        float_values: List[Union[int, float]] = [
+        float_values: List[int | float | Symbol] = [
             float(x.strip()) for x in args_str.split(",") if x.strip()
         ]
 
@@ -82,20 +86,35 @@ def parse_directive(
             return None
 
         val = float_values[0] if len(float_values) == 1 else float_values
-        return allocator.allocate_data(val, name=label_name)
+        return allocator.allocate_data(val, name=label_name, enforce_alignment=False)
 
-    elif directive in [".asciz", ".string", ".ascii"]:
+    elif directive in [".asciz", ".string"]:
         match = re.search(r'(".*")', args_str)
         if match:
             quoted_str = match.group(1)
             content = ast.literal_eval(quoted_str)
 
-            return allocator.allocate_data(content, name=label_name)
+            return allocator.allocate_data(
+                content, name=label_name, enforce_alignment=False
+            )
+
+    elif directive == ".ascii":
+        match = re.search(r'(".*")', args_str)
+        if match:
+            quoted_str = match.group(1)
+            content = ast.literal_eval(quoted_str)
+            # Encode to bytes to represent raw data (no null terminator)
+            # latin-1 preserves byte values 1-to-1
+            return allocator.allocate_data(
+                content.encode("latin-1"), name=label_name, enforce_alignment=False
+            )
 
     elif directive in [".zero", ".space", ".skip"]:
         try:
-            size = int(args_str.split()[0])
-            return allocator.allocate_empty(size, name=label_name)
+            size = int(args_str.split()[0], 0)
+            return allocator.allocate_empty(
+                size, name=label_name, enforce_alignment=False
+            )
         except (ValueError, IndexError):
             return None
 
