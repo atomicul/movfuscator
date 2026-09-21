@@ -26,3 +26,9 @@ testpaths = ["tests"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/movfuscator"]
+
+[dependency-groups]
+dev = [
+    "movfuscator[test]",
+    "tach>=0.35.1",
+]
