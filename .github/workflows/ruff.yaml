@@ -23,5 +23,5 @@ jobs:
 
       - name: Run Ruff Checks
         run: |
-          uvx ruff format --check .
-          uvx ruff check .
+          uv run ruff format --check .
+          uv run ruff check .
